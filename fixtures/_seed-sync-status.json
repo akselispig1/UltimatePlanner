@@ -1,0 +1,34 @@
+{
+  "integrations": {
+    "anthropic": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "github": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "calendar": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "strava": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "health": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "schoology": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    }
+  }
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+    <title>Life Balancer</title>
+    <meta name="description" content="Personal life-planning: training, school, sleep, food — balanced around your calendar." />
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <!-- iOS home-screen / standalone -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Life Balancer" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  </head>
+  <body>
+    <div id="demo-bar">Demo data — no keys connected</div>
+    <main id="view"><div class="empty">Loading…</div></main>
+    <nav id="nav"></nav>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

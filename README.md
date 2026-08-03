@@ -8,6 +8,25 @@ A serverless personal life-planning PWA. Frontend on GitHub Pages, "backend" is 
 
 ---
 
+## Running it (the core is built — mock mode)
+
+This repo now contains the built PWA. It runs **fully on realistic demo data with no API keys**.
+
+```bash
+npm install     # dev-only: Playwright, used by the check
+npm start       # serve at http://localhost:5173
+npm run check   # headless self-verification (§5.3) — 29 assertions
+```
+
+Open the URL on a phone (or a 390×844 viewport). Bottom nav: **Today · Training · School · Chat · Me**. Chat is the main way in — it streams, takes photos, and drives the six tools against real JSON. The amber **DEMO DATA** bar shows until you connect keys.
+
+- **Connecting real integrations:** [SETUP.md](SETUP.md) — one section per integration, easiest first (Anthropic → GitHub PAT → Google Calendar → Strava → Apple Health → Schoology). Each flips its own adapter from mock to live independently.
+- **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflows (calendar drain, Strava poll, Schoology pull, nightly Balancer).
+- **Nutrition safety rules + conventions:** [CLAUDE.md](CLAUDE.md).
+- **What works vs what's still stubbed:** see [Status](#status--what-works-vs-stubbed) at the bottom.
+
+---
+
 ## 0. Non-negotiable constraints
 
 - No server, no VPS, no Vercel/Netlify functions. GitHub Pages + GitHub Actions only.
@@ -282,3 +301,29 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 - Every API call wrapped with retry + a written error state in `/data/sync-status.json`. The app shows last-sync time per integration.
 - Commit setup instructions to `README.md` as you go: how to get each token, where each secret goes.
 - Never commit tokens, `.env`, or raw API responses containing personal data beyond what's needed.
+
+---
+
+## Status — what works vs stubbed
+
+**Works today, fully verifiable in mock mode (`npm run check` — 29/29 passing):**
+
+- PWA shell — manifest, service worker, **offline render**, home-screen install metadata, dark Garmin styling, safe-area insets, 390×844.
+- Bottom nav + all five views rendering realistic now-relative fixtures (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, trips).
+- **Chat** — conversation UI, streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**.
+- **All six tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`.
+- **Goals** — create/edit/retire; progress computed from data (never asserted).
+- **Training** — plan CRUD via tools, completion matching against activities, rolling 7/28-day load + chart, missed-session flagging (never auto-stacked).
+- **Calendar queue** — intents written, in-app drain against the mock calendar marks entries `done`; idempotent.
+- **Study blocks** — generated from assignments, sized by weight, placed in free time; proven never to overlap fixed commitments.
+- **Setup screen** — per-integration connected/not-connected status; key entry (never displayed/logged); clear-all wipes keys + unregisters the SW.
+- **Nutrition rules** enforced verbatim in the system prompt and mirrored in `CLAUDE.md`; weight is a number + trend only; restriction language surfaces a gentle parent/coach prompt.
+- **The Balancer** and **social review queue** logic run in-app.
+- Adapters: every service has signature-identical `mock.js`/`live.js`; selection is automatic on a key appearing.
+
+**Stubbed / awaiting real credentials (unverifiable here, templated for when keys go in):**
+
+- Live API calls — the `live.js` adapters and the `data-repo-template/` scripts (Google/Strava/Schoology OAuth, the drain and Balancer Actions) are written but need real secrets to exercise. The one-off OAuth helper scripts are provided.
+- Apple Health sleep — arrives via an iOS Shortcut you build (§3.4/§5.4); documented, not automatable from here.
+- Push notifications — Phase 7, intentionally not built (§5.5).
+- Manual device checks (real iOS home-screen install, live network-kill mid-session) — the automated offline + render checks cover the headless equivalents.

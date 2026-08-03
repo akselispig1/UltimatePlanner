@@ -1,0 +1,16 @@
+{
+  "name": "life-balancer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Serverless personal life-planning PWA. GitHub Pages + GitHub Actions only.",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "gen:fixtures": "node scripts/gen-fixtures.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

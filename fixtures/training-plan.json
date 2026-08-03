@@ -1,0 +1,61 @@
+{
+  "updatedAt": null,
+  "sessions": [
+    {
+      "id": "ses-mon",
+      "day": "Mon",
+      "type": "gym",
+      "durationMin": 45,
+      "intensity": "easy",
+      "note": "Strength — legs + core"
+    },
+    {
+      "id": "ses-tue",
+      "day": "Tue",
+      "type": "ride",
+      "durationMin": 90,
+      "intensity": "endurance",
+      "note": "Zone 2 trail miles"
+    },
+    {
+      "id": "ses-wed",
+      "day": "Wed",
+      "type": "rest",
+      "durationMin": 0,
+      "intensity": "recovery",
+      "note": "Rest / mobility"
+    },
+    {
+      "id": "ses-thu",
+      "day": "Thu",
+      "type": "ride",
+      "durationMin": 75,
+      "intensity": "threshold",
+      "note": "Intervals — 4x6min"
+    },
+    {
+      "id": "ses-fri",
+      "day": "Fri",
+      "type": "gym",
+      "durationMin": 40,
+      "intensity": "easy",
+      "note": "Upper body + core"
+    },
+    {
+      "id": "ses-sat",
+      "day": "Sat",
+      "type": "ride",
+      "durationMin": 150,
+      "intensity": "endurance",
+      "note": "Long trail ride"
+    },
+    {
+      "id": "ses-sun",
+      "day": "Sun",
+      "type": "ride",
+      "durationMin": 60,
+      "intensity": "recovery",
+      "note": "Easy spin"
+    }
+  ]
+}

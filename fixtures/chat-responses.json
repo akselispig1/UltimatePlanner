@@ -1,0 +1,147 @@
+{
+  "responses": [
+    {
+      "match": [
+        "goal",
+        "consistent",
+        "set a goal"
+      ],
+      "steps": [
+        {
+          "text": "Sure — I'll set a consistency goal to ride 6 hours a week. Confirming and saving it now."
+        },
+        {
+          "tool": "set_goal",
+          "input": {
+            "title": "Ride 6h/week consistently",
+            "type": "consistency",
+            "target": "6 hours per week",
+            "metric": "weekly_ride_hours",
+            "targetValue": 6
+          }
+        },
+        {
+          "text": "Done. Saved \"Ride 6h/week consistently\" as a consistency goal — progress will track from your Strava rides."
+        }
+      ]
+    },
+    {
+      "match": [
+        "thursday",
+        "easier",
+        "downgrade",
+        "tired"
+      ],
+      "steps": [
+        {
+          "text": "You've had two rough nights, so easing Thursday makes sense. I'll drop it from threshold intervals to an endurance ride — want me to apply that?"
+        },
+        {
+          "tool": "adjust_training_plan",
+          "input": {
+            "day": "Thu",
+            "intensity": "endurance",
+            "note": "Eased after poor sleep"
+          }
+        },
+        {
+          "text": "Updated Thursday to an endurance ride. I didn't touch the rest of the week."
+        }
+      ]
+    },
+    {
+      "match": [
+        "study",
+        "essay",
+        "assignment",
+        "revise"
+      ],
+      "steps": [
+        {
+          "text": "Let's protect time for the English essay before it's due. I'll drop a 60-minute study block into a free evening slot."
+        },
+        {
+          "tool": "create_study_block",
+          "input": {
+            "assignmentTitle": "English essay: Of Mice and Men",
+            "durationMin": 60
+          }
+        },
+        {
+          "text": "Scheduled a 60-minute study block for the English essay and queued it to your calendar."
+        }
+      ]
+    },
+    {
+      "match": [
+        "weight",
+        "weigh",
+        "scale"
+      ],
+      "steps": [
+        {
+          "text": "Logged. Your 30-day trend is steady with normal day-to-day noise — nothing to read into a single number."
+        },
+        {
+          "tool": "log_entry",
+          "input": {
+            "kind": "weight",
+            "value": 52.6
+          }
+        },
+        {
+          "text": "Saved 52.6 kg to your trend line."
+        }
+      ]
+    },
+    {
+      "match": [
+        "eat",
+        "food",
+        "plate",
+        "lunch",
+        "dinner",
+        "meal"
+      ],
+      "steps": [
+        {
+          "text": "Looks like rice, chicken and some salad — a solid base. You've got a long ride tomorrow, so you'll want more carbs than a normal day: add a banana or a slice of bread now and top up with a yoghurt this evening."
+        }
+      ]
+    },
+    {
+      "match": [
+        "calendar",
+        "schedule tomorrow",
+        "plan my day"
+      ],
+      "steps": [
+        {
+          "text": "Here's tomorrow: school 08:15–15:30, then your endurance ride at 16:30, and a 45-min study block for maths after dinner. I'll queue those to your calendar."
+        },
+        {
+          "tool": "queue_calendar_change",
+          "input": {
+            "action": "create",
+            "event": {
+              "title": "Endurance ride",
+              "date": "+1",
+              "start": "16:30",
+              "durationMin": 90
+            }
+          }
+        },
+        {
+          "text": "Queued the ride to your calendar — it shows as pending until the sync job runs."
+        }
+      ]
+    }
+  ],
+  "fallback": {
+    "steps": [
+      {
+        "text": "I'm running on demo data right now, so I can talk through your training, school, sleep and food, and I can set goals, adjust sessions, log entries and queue calendar changes. What do you want to look at?"
+      }
+    ]
+  }
+}

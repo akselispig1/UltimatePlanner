@@ -1,0 +1,34 @@
+name: strava-sync
+# Polls Strava for recent activities every 30 minutes (§2 — poll, not webhooks).
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: strava-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DATA_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Poll Strava
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+        run: node scripts/sync-strava.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "life-balancer-bot"
+          git config user.email "life-balancer-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "strava-sync [skip ci]"
+          git push

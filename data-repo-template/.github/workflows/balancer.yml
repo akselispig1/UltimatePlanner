@@ -1,0 +1,31 @@
+name: balancer
+# Nightly job that composes tomorrow and appends calendar intents (§3.7). Runs at
+# 04:30 UTC; cron can fire 5–20 min late (§1.6) — nothing depends on exact timing.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: balancer
+  cancel-in-progress: false
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DATA_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Compose tomorrow
+        run: node scripts/run-balancer.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "life-balancer-bot"
+          git config user.email "life-balancer-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "balancer: compose tomorrow [skip ci]"
+          git push

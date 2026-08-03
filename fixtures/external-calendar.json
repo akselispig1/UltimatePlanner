@@ -1,0 +1,31 @@
+[
+  {
+    "id": "cal-trip-1",
+    "title": "Geography field trip — Ticino",
+    "date": "2026-08-13",
+    "endDate": "2026-08-14",
+    "allDay": true,
+    "kind": "trip",
+    "source": "schoology"
+  },
+  {
+    "id": "cal-sch-1",
+    "title": "School day",
+    "date": "2026-08-04",
+    "allDay": false,
+    "start": "08:15",
+    "end": "15:30",
+    "kind": "school",
+    "source": "schoology"
+  },
+  {
+    "id": "cal-sch-2",
+    "title": "School day",
+    "date": "2026-08-05",
+    "allDay": false,
+    "start": "08:15",
+    "end": "15:30",
+    "kind": "school",
+    "source": "schoology"
+  }
+]
