@@ -90,8 +90,14 @@ async function boot() {
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('SW register failed', err));
+  // Skippable for embedded/sandboxed contexts (e.g. a single-file demo build).
+  if (window.__NO_SW__) return;
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    try {
+      navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('SW register failed', err));
+    } catch (err) {
+      console.warn('SW register unavailable', err);
+    }
   }
 }
 
