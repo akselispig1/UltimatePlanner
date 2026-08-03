@@ -64,6 +64,29 @@ export function computeLoad(activities, now = new Date()) {
   return { sevenDay, twentyEightDay, series };
 }
 
+// Build a progressive, multi-week training block from a base weekly template
+// (§3.1 "more sophisticated plans"). Ramps volume through build weeks, adds an
+// intensity session mid-block, then tapers the final week. Pure — the chat tool
+// and the Balancer can both use it.
+export function buildProgressiveBlock(base, weeksCount = 4, focus = 'Build') {
+  const weeks = [];
+  const n = Math.max(1, Math.min(12, weeksCount));
+  for (let w = 1; w <= n; w++) {
+    const taper = w === n && n >= 3;
+    const factor = taper ? 0.6 : 1 + (w - 1) * 0.08;
+    const wkFocus = taper ? 'Taper — sharpen and rest' : w === 1 ? 'Base — settle in' : `${focus} — week ${w}`;
+    const sessions = (base || []).map((s) => {
+      if (s.type === 'rest' || s.durationMin === 0) return { day: s.day, type: s.type, durationMin: s.durationMin, intensity: s.intensity, note: s.note };
+      let intensity = s.intensity;
+      // Introduce threshold work on the mid-week quality day during build weeks.
+      if (!taper && w >= 2 && s.day === 'Thu') intensity = 'threshold';
+      return { day: s.day, type: s.type, durationMin: Math.max(20, Math.round((s.durationMin * factor) / 5) * 5), intensity, note: s.note };
+    });
+    weeks.push({ week: w, focus: wkFocus, sessions });
+  }
+  return weeks;
+}
+
 // Missed sessions in the recent past (planned, not rest, no matching activity).
 export function missedSessions(plan, activities, now = new Date(), lookbackDays = 14) {
   const sessions = datedSessions(plan, -lookbackDays, -1, now);

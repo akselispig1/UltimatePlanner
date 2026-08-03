@@ -97,6 +97,78 @@ export const SCHEMAS = {
     },
   },
 
+  [DATA_FILES.plans]: {
+    name: 'plans',
+    type: 'object',
+    props: {
+      trainingBlocks: {
+        type: 'array',
+        required: true,
+        items: {
+          type: 'object',
+          props: {
+            id: { type: 'string', required: true },
+            goalId: { type: ['string', 'null'], required: true },
+            title: { type: 'string', required: true },
+            createdAt: { type: 'string' },
+            summary: { type: 'string' },
+            weeks: {
+              type: 'array',
+              required: true,
+              items: {
+                type: 'object',
+                props: {
+                  week: { type: 'number', required: true },
+                  focus: { type: 'string', required: true },
+                  sessions: {
+                    type: 'array',
+                    required: true,
+                    items: {
+                      type: 'object',
+                      props: {
+                        day: { type: 'string', required: true, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                        type: { type: 'string', required: true },
+                        durationMin: { type: 'number', required: true },
+                        intensity: { type: 'string', required: true },
+                        note: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      fuellingPlans: {
+        type: 'array',
+        required: true,
+        items: {
+          type: 'object',
+          props: {
+            id: { type: 'string', required: true },
+            goalId: { type: ['string', 'null'], required: true },
+            title: { type: 'string', required: true },
+            createdAt: { type: 'string' },
+            summary: { type: 'string' },
+            principles: { type: 'array', items: { type: 'string' } },
+            days: {
+              type: 'array',
+              required: true,
+              items: {
+                type: 'object',
+                props: {
+                  when: { type: 'string', required: true },
+                  guidance: { type: 'string', required: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
   [DATA_FILES.calendarQueue]: {
     name: 'calendar-queue',
     type: 'object',

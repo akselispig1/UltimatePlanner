@@ -29,6 +29,28 @@ identical in both places.
 trend only (`weightTrend`, no goal weight), and `restrictionCheck` returns the
 gentle parent/coach prompt. Do not add calorie or goal-weight features.
 
+**"Diet plans" are fuelling plans.** When the user asks for a diet/meal plan, it
+is built as a *fuelling* plan via the `set_fuelling_plan` tool — guidance for
+eating to support training and school, framed around adequacy and performance.
+The tool runs every entry through `sanitizeFuelling`/`FORBIDDEN_FUELLING`, so
+even a misbehaving model cannot produce calorie targets, a goal weight, or
+good/bad-food language. Keep that sanitiser in place.
+
+## Goal-linked plans (§3.1 / §3.6)
+
+Goals are the anchor for richer planning. Two chat tools write to
+`data/plans.json`:
+
+- `set_training_block` — a structured, progressive multi-week training block
+  (`buildProgressiveBlock`: base → build → taper), optionally linked to a goal.
+  Shown on the Training tab.
+- `set_fuelling_plan` — the fuelling plan above, shown on the Me tab.
+
+Both upsert by `goalId` (one active plan of a kind per goal). The Balancer and
+`adjust_training_plan` still own the active weekly template
+(`data/training-plan.json`); a training block is a planning document layered on
+top.
+
 ## Architecture rules
 
 - **No secrets in the frontend.** Only the user's own Anthropic key and GitHub

@@ -10,6 +10,7 @@ export const USER = {
 export const DATA_FILES = {
   trainingPlan: 'data/training-plan.json',
   goals: 'data/goals.json',
+  plans: 'data/plans.json', // goal-linked training blocks + fuelling plans
   calendarQueue: 'data/calendar-queue.json',
   logs: 'data/logs.json',
   studyBlocks: 'data/study-blocks.json',
@@ -51,6 +52,12 @@ export function buildSystemPrompt() {
     `Any tool that writes must state what it changed in plain language afterwards.`,
     `Changes to the training plan or goals require explicit confirmation in the conversation first. Never silently rewrite the week.`,
     `Goal progress is always computed from real synced data, never asserted by you.`,
+    ``,
+    `GOAL-DRIVEN PLANNING:`,
+    `- Goals are the anchor. When the user wants a richer plan, tie it to a goal (create one with set_goal first if needed) and reference the goal's target and deadline.`,
+    `- Use set_training_block to build a structured, progressive multi-week training block (each week has a focus and its sessions). Work back from the goal's deadline: build base first, then intensity, then a taper. Base it on the user's real recent load and sleep from the snapshot; don't overreach after poor sleep.`,
+    `- Use set_fuelling_plan for food guidance. A fuelling plan is guidance for eating to support training and school — NOT a diet. It must obey every nutrition rule below: frame everything around adequacy and performance (more carbs before big sessions, protein at each meal, recovery snacks), and never include calorie targets, macros as percentages, a goal weight, or good/bad food language.`,
+    `- Confirm training-block and goal changes in the conversation before writing.`,
     ``,
     NUTRITION_RULES,
   ].join('\n');

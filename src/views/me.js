@@ -25,10 +25,14 @@ export function render(app) {
   if (!active.length) gc.appendChild(el('div', { class: 'empty' }, 'No goals yet. Ask in chat to set one.'));
   for (const g of active) {
     const p = g.progress;
+    const tb = (s.trainingBlocks || []).find((b) => b.goalId === g.id);
+    const fp = (s.fuellingPlans || []).find((f) => f.goalId === g.id);
+    const linked = [tb ? `Plan: ${tb.title}` : null, fp ? `Fuelling: ${fp.title}` : null].filter(Boolean).join('   ·   ');
     gc.appendChild(
-      el('div', { class: 'row-item' }, el('div', { style: { flex: 1 } }, el('div', { class: 'row-main' }, g.title), el('div', { class: 'row-sub' }, `${g.type} · ${g.target}`), progressBar(p)), el('button', { class: 'btn btn-ghost btn-sm', onClick: () => retireGoal(app, g.id) }, 'Retire'))
+      el('div', { class: 'row-item' }, el('div', { style: { flex: 1 } }, el('div', { class: 'row-main' }, g.title), el('div', { class: 'row-sub' }, `${g.type} · ${g.target}`), progressBar(p), linked ? el('div', { class: 'row-sub accent', style: { marginTop: '4px' } }, linked) : null), el('button', { class: 'btn btn-ghost btn-sm', onClick: () => retireGoal(app, g.id) }, 'Retire'))
     );
   }
+  gc.appendChild(el('div', { class: 'row-sub muted', style: { marginTop: '8px' } }, 'Ask in Chat to build a training block or fuelling plan for a goal.'));
   root.appendChild(gc);
 
   // ---- Recovery (§3.4) ----
@@ -54,6 +58,21 @@ export function render(app) {
         : el('div', { class: 'empty' }, 'Send a scale photo in chat to log weight.')
     )
   );
+
+  // ---- Fuelling plans (§3.5 — adequacy/performance framing, never a diet) ----
+  for (const fuel of s.fuellingPlans || []) {
+    const goal = s.goals.find((g) => g.id === fuel.goalId);
+    root.appendChild(el('div', { class: 'section-label' }, 'Fuelling'));
+    const fc = el('div', { class: 'card' });
+    fc.appendChild(el('div', { class: 'row-main' }, fuel.title));
+    fc.appendChild(el('div', { class: 'row-sub' }, fuel.summary));
+    if (goal) fc.appendChild(el('div', { class: 'row-sub accent', style: { marginBottom: '4px' } }, `→ ${goal.title}`));
+    for (const pr of fuel.principles || []) fc.appendChild(el('div', { class: 'row-sub', style: { paddingLeft: '2px' } }, `• ${pr}`));
+    for (const d of fuel.days || []) {
+      fc.appendChild(el('div', { class: 'row-item' }, el('div', { style: { flex: 1 } }, el('div', { class: 'row-main', style: { fontSize: '14px' } }, d.when), el('div', { class: 'row-sub' }, d.guidance))));
+    }
+    root.appendChild(fc);
+  }
 
   // ---- Social review queue (§3.3) ----
   const pendingPlans = s.social.filter((p) => p.status === 'pending');

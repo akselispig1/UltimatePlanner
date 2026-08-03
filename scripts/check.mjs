@@ -19,6 +19,8 @@ import { seedFor } from '../src/seed.js';
 import { generateStudyBlocks } from '../src/features/school.js';
 import { fixedCommitments, overlaps } from '../src/features/schedule.js';
 import { drainQueue, enqueue } from '../src/features/calendar-queue.js';
+import { runChat } from '../src/chat.js';
+import { FORBIDDEN_FUELLING } from '../src/features/nutrition.js';
 import * as fx from '../src/fixtures.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -114,6 +116,28 @@ function checkStudyOverlap() {
   check('no two study blocks overlap each other', selfOverlap === 0, `${selfOverlap} overlaps`);
 }
 
+async function checkPlans() {
+  section('Goal-linked plans built via chat (training + fuelling)');
+  const before = await store.read(DATA_FILES.plans);
+  // Ask the chatbot to build a sophisticated training plan.
+  const t = [];
+  await runChat({ userText: 'build me a more sophisticated training plan for my goal', onTool: (x) => t.push(x.name), now: new Date() });
+  const afterT = await store.read(DATA_FILES.plans);
+  const block = afterT.trainingBlocks.find((b) => b.goalId === 'goal-2') || afterT.trainingBlocks[afterT.trainingBlocks.length - 1];
+  check('set_training_block ran from chat', t.includes('set_training_block'), t.join(','));
+  check('training block is multi-week and progressive', !!block && block.weeks.length >= 3 && block.weeks[block.weeks.length - 1].focus.toLowerCase().includes('taper'), block ? `${block.weeks.length} weeks` : 'none');
+
+  // Ask for a "diet plan" — must be saved as a safe fuelling plan.
+  const f = [];
+  await runChat({ userText: 'can you make me a diet plan', onTool: (x) => f.push(x.name), now: new Date() });
+  const afterF = await store.read(DATA_FILES.plans);
+  check('set_fuelling_plan ran from chat (diet request reframed)', f.includes('set_fuelling_plan'), f.join(','));
+  const fuelText = JSON.stringify(afterF.fuellingPlans).toLowerCase();
+  const bad = FORBIDDEN_FUELLING.filter((w) => fuelText.includes(w));
+  check('fuelling plan contains no calorie/goal-weight/restriction language (§3.5)', bad.length === 0, bad.length ? bad.join(', ') : '');
+  check('fuelling plan has real guidance', afterF.fuellingPlans.length > 0 && (afterF.fuellingPlans[0].days || []).length > 0);
+}
+
 function intervalOf(b) {
   const [h, m] = b.start.split(':').map(Number);
   return { start: h * 60 + m, end: h * 60 + m + b.durationMin };
@@ -205,6 +229,14 @@ async function checkBrowser() {
     const retireButtons = await page.locator('#view button', { hasText: 'Retire' }).count();
     check('Me view reflects the new goal (§5.3 "UI reflects it")', retireButtons === activeAfter, `${retireButtons} goal rows`);
 
+    section('Goal-linked plans surface in the UI');
+    await page.locator('#nav .nav-item').nth(1).click();
+    await page.waitForTimeout(200);
+    check('Training view shows the goal-linked training block', (await page.locator('#view', { hasText: 'Training block' }).count()) > 0);
+    await page.locator('#nav .nav-item').nth(4).click();
+    await page.waitForTimeout(200);
+    check('Me view shows the fuelling plan', (await page.locator('#view', { hasText: 'Fuelling' }).count()) > 0);
+
     section('App renders offline with the network disabled (§5.3)');
     await page.evaluate(() => navigator.serviceWorker.ready).catch(() => {});
     await page.waitForTimeout(300); // let precache settle
@@ -232,6 +264,7 @@ async function main() {
   await checkRoundTrip();
   await checkQueueDrain();
   checkStudyOverlap();
+  await checkPlans();
   await checkNoSecrets();
   try {
     await checkBrowser();

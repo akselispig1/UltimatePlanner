@@ -18,9 +18,10 @@ export async function gatherState(now = new Date()) {
     schoology.getTripEvents(),
   ]);
 
-  const [plan, goalsData, logsData, socialData, queueData, studyData, syncData] = await Promise.all([
+  const [plan, goalsData, plansData, logsData, socialData, queueData, studyData, syncData] = await Promise.all([
     store.read(DATA_FILES.trainingPlan),
     store.read(DATA_FILES.goals),
+    store.read(DATA_FILES.plans),
     store.read(DATA_FILES.logs),
     store.read(DATA_FILES.socialQueue),
     store.read(DATA_FILES.calendarQueue),
@@ -36,6 +37,8 @@ export async function gatherState(now = new Date()) {
     externalCal: trips, // trips; weekday school blocks are synthesised in schedule.js
     plan,
     goals: goalsData.goals,
+    trainingBlocks: plansData.trainingBlocks || [],
+    fuellingPlans: plansData.fuellingPlans || [],
     logs: logsData.entries,
     social: socialData.plans,
     queue: queueData.queue,

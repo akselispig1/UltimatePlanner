@@ -12,7 +12,7 @@ import { fixedCommitments, toHHMM } from './features/schedule.js';
 import { offsetToIso, isoDate, today, daysBetween } from './util/dates.js';
 
 export function buildSnapshot(state) {
-  const { now, activities, sleep, assignments, plan, goals, logs, social, externalCal } = state;
+  const { now, activities, sleep, assignments, plan, goals, logs, social, externalCal, trainingBlocks = [], fuellingPlans = [] } = state;
 
   const training = withCompletion(datedSessions(plan, -14, 0, now), activities, now).map((s) => ({
     date: s.date,
@@ -60,5 +60,9 @@ export function buildSnapshot(state) {
     openAssignments,
     upcomingWeek: week,
     confirmedSocial: social.filter((p) => p.status === 'confirmed').map((p) => ({ what: p.what, when: p.when })),
+    plans: {
+      training: trainingBlocks.map((b) => ({ title: b.title, goalId: b.goalId, weeks: (b.weeks || []).length })),
+      fuelling: fuellingPlans.map((f) => ({ title: f.title, goalId: f.goalId })),
+    },
   };
 }

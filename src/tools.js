@@ -9,8 +9,9 @@ import { gatherState } from './app-data.js';
 import { enqueue } from './features/calendar-queue.js';
 import { scheduleOne } from './features/school.js';
 import { withProgress } from './features/goals.js';
-import { datedSessions, withCompletion } from './features/training.js';
+import { datedSessions, withCompletion, buildProgressiveBlock } from './features/training.js';
 import { recentSleep } from './features/recovery.js';
+import { sanitizeFuelling, buildDefaultFuelling } from './features/nutrition.js';
 import { uuid } from './util/id.js';
 import { offsetToIso } from './util/dates.js';
 
@@ -20,6 +21,26 @@ function resolveEventDate(event, now) {
     return { ...event, date: offsetToIso(Number(event.date), now) };
   }
   return event;
+}
+
+// Resolve a goal by explicit id or by (fuzzy) title. Returns the goal or null.
+function resolveGoal(goals, { goalId, goalTitle }) {
+  if (goalId) return goals.find((g) => g.id === goalId) || null;
+  if (goalTitle) return goals.find((g) => g.title.toLowerCase().includes(String(goalTitle).toLowerCase())) || null;
+  return null;
+}
+
+// Insert or replace a plan by goalId (one active plan of a kind per goal). Plans
+// with no goal are appended.
+function upsertByGoal(list, entry) {
+  if (entry.goalId) {
+    const i = list.findIndex((p) => p.goalId === entry.goalId);
+    if (i >= 0) {
+      list[i] = entry;
+      return;
+    }
+  }
+  list.push(entry);
 }
 
 export const TOOLS = {
@@ -182,6 +203,81 @@ export const TOOLS = {
       await store.write(DATA_FILES.studyBlocks, sb);
       await enqueue(store, { action: 'create', event: { title: block.title, date: block.date, start: block.start, durationMin: block.durationMin, kind: 'study' } });
       return { summary: `Scheduled ${block.durationMin}min study for "${title}" on ${block.date} at ${block.start}, queued to calendar.`, data: { id: block.id } };
+    },
+  },
+
+  set_training_block: {
+    description: 'Create or replace a structured, progressive multi-week training block, optionally linked to a goal. Provide explicit weeks, or a weeksCount + focus to auto-build a progression from the current weekly plan.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        goalId: { type: 'string' },
+        goalTitle: { type: 'string', description: 'Link by goal title if you do not have the id.' },
+        title: { type: 'string' },
+        focus: { type: 'string', description: 'e.g. "Threshold", "Base endurance", "Climbing".' },
+        weeksCount: { type: 'number' },
+        summary: { type: 'string' },
+        weeks: {
+          type: 'array',
+          description: 'Optional explicit weeks. Each: { week, focus, sessions:[{day,type,durationMin,intensity,note}] }.',
+          items: { type: 'object' },
+        },
+      },
+    },
+    async run(input = {}, { now = new Date() } = {}) {
+      const [goalsData, plansData, planData] = await Promise.all([store.read(DATA_FILES.goals), store.read(DATA_FILES.plans), store.read(DATA_FILES.trainingPlan)]);
+      const goal = resolveGoal(goalsData.goals, input);
+      const weeks = Array.isArray(input.weeks) && input.weeks.length ? input.weeks : buildProgressiveBlock(planData.sessions, input.weeksCount || 4, input.focus || 'Build');
+      const focus = input.focus || 'training';
+      const block = {
+        id: `tb-${uuid()}`,
+        goalId: goal ? goal.id : null,
+        title: input.title || `${weeks.length}-week ${focus.toLowerCase()} block`,
+        createdAt: offsetToIso(0, now),
+        summary: input.summary || `Progressive ${weeks.length}-week block${goal ? ` toward "${goal.title}"` : ''} — base, build, then taper.`,
+        weeks,
+      };
+      upsertByGoal(plansData.trainingBlocks, block);
+      await store.write(DATA_FILES.plans, plansData);
+      return { summary: `Saved a ${weeks.length}-week training block${goal ? ` for "${goal.title}"` : ''}.`, data: { id: block.id } };
+    },
+  },
+
+  set_fuelling_plan: {
+    description: 'Create or replace a fuelling plan (how to eat to support training and school), optionally linked to a goal. Framed around adequacy and performance only — never calories, macros, goal weight, or good/bad food. Provide principles + days, or omit to use a safe default.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        goalId: { type: 'string' },
+        goalTitle: { type: 'string' },
+        title: { type: 'string' },
+        summary: { type: 'string' },
+        principles: { type: 'array', items: { type: 'string' } },
+        days: { type: 'array', items: { type: 'object' } },
+      },
+    },
+    async run(input = {}, { now = new Date() } = {}) {
+      const [goalsData, plansData] = await Promise.all([store.read(DATA_FILES.goals), store.read(DATA_FILES.plans)]);
+      const goal = resolveGoal(goalsData.goals, input);
+      const provided = { principles: input.principles, days: input.days, summary: input.summary };
+      const hasContent = Array.isArray(provided.principles) && provided.principles.length && Array.isArray(provided.days) && provided.days.length;
+      const source = hasContent ? provided : buildDefaultFuelling();
+      // Enforce §3.5 even if the model misbehaves.
+      const { plan: clean, removed } = sanitizeFuelling({ ...source, summary: input.summary });
+      const fallback = buildDefaultFuelling();
+      const fuelling = {
+        id: `fp-${uuid()}`,
+        goalId: goal ? goal.id : null,
+        title: input.title || 'Fuelling plan',
+        createdAt: offsetToIso(0, now),
+        summary: clean.summary || 'Eat enough to train and study well — more around big sessions.',
+        principles: clean.principles.length ? clean.principles : fallback.principles,
+        days: clean.days.length ? clean.days : fallback.days,
+      };
+      upsertByGoal(plansData.fuellingPlans, fuelling);
+      await store.write(DATA_FILES.plans, plansData);
+      const note = removed.length ? ` (removed ${removed.length} item${removed.length > 1 ? 's' : ''} that broke the nutrition rules)` : '';
+      return { summary: `Saved a fuelling plan${goal ? ` for "${goal.title}"` : ''}${note}.`, data: { id: fuelling.id } };
     },
   },
 };

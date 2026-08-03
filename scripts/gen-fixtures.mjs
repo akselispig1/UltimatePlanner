@@ -33,5 +33,6 @@ write('chat-responses.json', { responses: fx.chatResponses(), fallback: fx.CHAT_
 // Seed snapshots of the writable data files.
 write('_seed-logs.json', seedFor(DATA_FILES.logs, now));
 write('_seed-sync-status.json', seedFor(DATA_FILES.syncStatus, now));
+write('_seed-plans.json', seedFor(DATA_FILES.plans, now));
 
 console.log('done');

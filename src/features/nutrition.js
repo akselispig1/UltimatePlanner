@@ -17,6 +17,46 @@ export function weightTrend(logEntries, now = new Date(), days = 30) {
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
+// Terms a fuelling plan must never contain (§3.5). The tool sanitises against
+// these so even a misbehaving model can't produce a restrictive/diet plan.
+export const FORBIDDEN_FUELLING = [
+  'calorie', 'kcal', 'deficit', 'macro', 'goal weight', 'target weight', 'weigh less',
+  'lose weight', 'cheat meal', 'earned', 'burn off', 'burned off', 'good food', 'bad food',
+];
+
+function violates(text) {
+  const t = String(text || '').toLowerCase();
+  return FORBIDDEN_FUELLING.some((w) => t.includes(w));
+}
+
+// A safe default fuelling plan (adequacy + performance framing only). Used when
+// the chat tool isn't handed explicit content.
+export function buildDefaultFuelling() {
+  return {
+    principles: [
+      'Start big ride days with extra carbs — porridge, banana, toast.',
+      'Protein at every meal to rebuild after sessions.',
+      'Keep a recovery snack within an hour of hard training.',
+      'Never skip breakfast on a school-plus-training day.',
+    ],
+    days: [
+      { when: 'Big ride / long trail days', guidance: 'Extra carbs before and during — add fruit, a bar, or a sandwich. Refuel within the hour after.' },
+      { when: 'Gym or short days', guidance: 'Balanced plate: protein, carbs and veg in normal portions.' },
+      { when: 'Rest days', guidance: 'Eat normally — rest days still need fuel to recover and grow.' },
+    ],
+  };
+}
+
+// Strip anything that breaks the nutrition rules from a fuelling plan. Returns
+// the cleaned plan plus a list of what was removed.
+export function sanitizeFuelling(plan) {
+  const removed = [];
+  const principles = (plan.principles || []).filter((p) => (violates(p) ? (removed.push(p), false) : true));
+  const days = (plan.days || []).filter((d) => (violates(d.when) || violates(d.guidance) ? (removed.push(d.when || d.guidance), false) : true));
+  const summary = violates(plan.summary) ? '' : plan.summary || '';
+  return { plan: { ...plan, principles, days, summary }, removed };
+}
+
 const RESTRICTION_HINTS = [
   'skip', 'skipped', 'not eating', "didn't eat", 'did not eat', 'starv', 'skipping meals',
   'lose weight', 'losing weight', 'too fat', 'on a diet', 'cutting', 'restrict', 'nothing to eat all day',

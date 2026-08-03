@@ -4,6 +4,8 @@
 import { DATA_FILES, INTEGRATIONS } from './config.js';
 import * as fx from './fixtures.js';
 import { offsetToIso } from './util/dates.js';
+import { buildProgressiveBlock } from './features/training.js';
+import { buildDefaultFuelling } from './features/nutrition.js';
 
 export function seedFor(fileKey, now = new Date()) {
   switch (fileKey) {
@@ -12,6 +14,18 @@ export function seedFor(fileKey, now = new Date()) {
 
     case DATA_FILES.goals:
       return { goals: fx.goals(now) };
+
+    case DATA_FILES.plans: {
+      const weeks = buildProgressiveBlock(fx.trainingPlan().sessions, 4, 'Threshold');
+      return {
+        trainingBlocks: [
+          { id: 'tb-seed', goalId: 'goal-2', title: '4-week threshold build', createdAt: offsetToIso(-3, now), summary: 'Progressive block toward the 20-minute power test — base, two build weeks, then a taper.', weeks },
+        ],
+        fuellingPlans: [
+          { id: 'fp-seed', goalId: 'goal-1', title: 'Fuelling for training days', createdAt: offsetToIso(-3, now), summary: 'Eat enough to train and study well — more around big sessions.', ...buildDefaultFuelling() },
+        ],
+      };
+    }
 
     case DATA_FILES.calendarQueue:
       return { queue: [] };

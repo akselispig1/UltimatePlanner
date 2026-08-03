@@ -3,7 +3,8 @@
 
 import { el, card, statTile, bars, fmtMins, fmtHours, fmtDay } from '../ui/dom.js';
 import { datedSessions, withCompletion, computeLoad, missedSessions } from '../features/training.js';
-import { today } from '../util/dates.js';
+import { today, daysBetween } from '../util/dates.js';
+import { parseIsoLocal } from '../features/schedule.js';
 
 const STATUS_PILL = { done: 'done', planned: 'planned', missed: 'missed', rest: 'rest' };
 
@@ -19,6 +20,9 @@ export function render(app) {
 
   root.appendChild(el('div', { class: 'section-label' }, '28-day load'));
   root.appendChild(card([bars(load.series.map((d) => ({ value: d.minutes }))), el('div', { class: 'row-sub', style: { marginTop: '8px' } }, 'Daily activity minutes')]));
+
+  // Goal-linked training block(s), built via chat (§3.1 sophisticated plans).
+  for (const block of s.trainingBlocks || []) root.appendChild(renderBlock(block, s, now));
 
   // Missed sessions (§3.1 — flag, don't auto-stack)
   const missed = missedSessions(s.plan, s.activities, now, 14);
@@ -42,6 +46,37 @@ export function render(app) {
   root.appendChild(c);
 
   return root;
+}
+
+function renderBlock(block, state, now) {
+  const goal = (state.goals || []).find((g) => g.id === block.goalId);
+  // Which week are we in, counting from when the block was created?
+  const elapsed = block.createdAt ? Math.max(0, daysBetween(parseIsoLocal(block.createdAt), today(now))) : 0;
+  const currentWeek = Math.min(block.weeks.length, Math.floor(elapsed / 7) + 1);
+
+  const wrap = el('div', {});
+  wrap.appendChild(el('div', { class: 'section-label' }, 'Training block'));
+  const c = el('div', { class: 'card' });
+  c.appendChild(el('div', { class: 'row-main' }, block.title));
+  c.appendChild(el('div', { class: 'row-sub', style: { marginBottom: '4px' } }, block.summary));
+  if (goal) c.appendChild(el('div', { class: 'row-sub accent' }, `→ ${goal.title}`));
+
+  for (const w of block.weeks) {
+    const isNow = w.week === currentWeek;
+    const quality = w.sessions.filter((x) => x.type !== 'rest' && ['threshold', 'hard', 'race', 'tempo'].includes(x.intensity)).length;
+    const head = el('div', { class: 'row-item' }, el('div', {}, el('div', { class: 'row-main' }, `Week ${w.week}${isNow ? ' · now' : ''}`), el('div', { class: 'row-sub' }, w.focus)), el('span', { class: `pill ${isNow ? 'planned' : 'rest'}` }, `${w.sessions.filter((x) => x.type !== 'rest').length} sessions${quality ? ' · ' + quality + ' hard' : ''}`));
+    c.appendChild(head);
+    // Expand the current week's sessions inline.
+    if (isNow) {
+      const list = el('div', { style: { padding: '2px 0 6px' } });
+      for (const ses of w.sessions.filter((x) => x.type !== 'rest')) {
+        list.appendChild(el('div', { class: 'row-sub', style: { paddingLeft: '2px' } }, `${ses.day} · ${cap(ses.type)} ${fmtMins(ses.durationMin)} · ${ses.intensity}`));
+      }
+      c.appendChild(list);
+    }
+  }
+  wrap.appendChild(c);
+  return wrap;
 }
 
 function cap(str) {

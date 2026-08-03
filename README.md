@@ -313,6 +313,7 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 - **Chat** — conversation UI, streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**.
 - **All six tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`.
 - **Goals** — create/edit/retire; progress computed from data (never asserted).
+- **Goal-linked plans (talk them through in Chat)** — `set_training_block` builds a structured, progressive multi-week training block (base → build → taper) tied to a goal, shown on the Training tab; `set_fuelling_plan` builds a fuelling plan (how to eat to support training and school) shown on the Me tab. A "diet plan" request is reframed as fuelling and sanitised against §3.5 (no calories, no goal weight, no good/bad food) at the tool boundary.
 - **Training** — plan CRUD via tools, completion matching against activities, rolling 7/28-day load + chart, missed-session flagging (never auto-stacked).
 - **Calendar queue** — intents written, in-app drain against the mock calendar marks entries `done`; idempotent.
 - **Study blocks** — generated from assignments, sized by weight, placed in free time; proven never to overlap fixed commitments.

@@ -2,6 +2,65 @@
   "responses": [
     {
       "match": [
+        "training plan",
+        "training block",
+        "sophisticated",
+        "periodi",
+        "build a plan",
+        "build me a plan",
+        "structured plan",
+        "plan for my goal",
+        "plan for the goal",
+        "multi-week",
+        "4 week",
+        "six week"
+      ],
+      "steps": [
+        {
+          "text": "Let's build this around your threshold power-test goal, working back from the deadline. I'll set a 4-week block — a base week, two build weeks with intervals, then a taper — sized off your recent load. Want me to save it?"
+        },
+        {
+          "tool": "set_training_block",
+          "input": {
+            "goalTitle": "Threshold power test PB",
+            "weeksCount": 4,
+            "focus": "Threshold"
+          }
+        },
+        {
+          "text": "Done — saved a 4-week threshold block linked to that goal. Week 1 settles you in, weeks 2–3 add the Thursday intervals, week 4 tapers before the test. It shows on the Training tab."
+        }
+      ]
+    },
+    {
+      "match": [
+        "fuelling",
+        "fueling",
+        "diet plan",
+        "meal plan",
+        "nutrition plan",
+        "eat to support",
+        "food plan",
+        "eating plan",
+        "fuel plan"
+      ],
+      "steps": [
+        {
+          "text": "I'll frame this as a fuelling plan — how to eat to train and study well, not a restriction diet. It leans on more carbs around your big sessions and protein at every meal. Save it?"
+        },
+        {
+          "tool": "set_fuelling_plan",
+          "input": {
+            "goalTitle": "Ride 6h/week consistently"
+          }
+        },
+        {
+          "text": "Saved a fuelling plan linked to your ride goal: extra carbs on big ride days, protein every meal, a recovery snack after hard sessions, and no skipping breakfast. It's on your Me tab."
+        }
+      ]
+    },
+    {
+      "match": [
         "goal",
         "consistent",
         "set a goal"
