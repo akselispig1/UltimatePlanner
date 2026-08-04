@@ -80,12 +80,20 @@ src/adapters/<svc>/{mock,live}.js                      external services
 src/features/*.js                                      pure logic (training, school,
                                                        recovery, nutrition, balancer,
                                                        goals, calendar-queue, schedule)
-src/views/*.js                                         Today / Training / School / Chat / Me
-src/{chat,tools,context,app-data,storage,keys}.js      chat loop, 6 tools, snapshot, data
+src/views/chat.js, settings.js                         the whole UI: chat + setup modal
+src/{chat,tools,context,app-data,storage,keys}.js      chat loop, 8 tools, snapshot, data
 fixtures/*.json                                        committed fixture snapshots
 scripts/check.mjs                                      npm run check (§5.3)
 data-repo-template/                                    workflows for the private data repo
 ```
+
+**The app is chat-only.** Per the owner's direction there are no dashboard tabs
+— the single surface is `views/chat.js` (conversation + inline plan
+confirmations), plus `views/settings.js` (a modal for keys, opened from the
+header gear). This is what §1 always asked for: chat is the primary input,
+Google Calendar the primary output. Info that a dashboard would show is answered
+by the bot or read from the calendar. Don't reintroduce standalone screens —
+add a tool or surface it in chat.
 
 ## Testing
 

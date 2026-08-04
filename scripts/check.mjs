@@ -199,43 +199,38 @@ async function checkBrowser() {
     await page.goto(url, { waitUntil: 'load' });
     await page.waitForFunction(() => window.__booted === true, { timeout: 10000 });
 
-    section('Every view renders without error in mock mode (§5.3)');
-    const routes = ['today', 'training', 'school', 'chat', 'me'];
-    const navItems = ['Today', 'Training', 'School', 'Chat', 'Me'];
-    for (let i = 0; i < routes.length; i++) {
-      const before = errors.length;
-      await page.locator('#nav .nav-item').nth(i).click();
-      await page.waitForTimeout(200);
-      const rendered = await page.locator('#view').evaluate((n) => n.childElementCount > 0 && !n.textContent.includes('hit an error'));
-      check(`view "${routes[i]}" renders`, rendered && errors.length === before, errors.length > before ? errors[errors.length - 1] : '');
-    }
+    section('Chat-only shell renders in mock mode (§5.3)');
+    check('chat composer renders', (await page.locator('.chat-composer').count()) === 1);
+    check('no dashboard nav (chat-only)', (await page.locator('#nav').count()) === 0);
+    check('header brand present', (await page.locator('#topbar .brand').count()) === 1);
     check('demo bar visible in mock mode', (await page.locator('#demo-bar:not(.hidden)').count()) === 1);
+    // Setup is reachable via the gear (§1.4) — the only non-chat surface.
+    await page.locator('.icon-btn.gear').click();
+    await page.waitForTimeout(200);
+    check('setup modal opens from the gear', (await page.locator('.modal-sheet').count()) === 1);
+    await page.locator('.modal-head button').click();
+    await page.waitForTimeout(150);
+    check('setup modal closes', (await page.locator('.modal-sheet').count()) === 0);
 
     section('Chat tool loop end to end (§5.3)');
-    await page.locator('#nav .nav-item').nth(3).click();
-    await page.waitForTimeout(200);
     const activeBefore = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.goals)).goals.filter((g) => g.status === 'active').length);
     await page.locator('.chat-composer textarea').fill('please set a goal to stay consistent');
     await page.locator('.chat-composer .btn-accent').click();
     await page.waitForSelector('.tool-row', { timeout: 8000 });
     await page.waitForTimeout(400);
-    const toolText = (await page.locator('.tool-row').first().textContent()).trim();
+    const toolText = (await page.locator('.tool-row', { hasText: 'goal' }).first().textContent()).trim();
     const activeAfter = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.goals)).goals.filter((g) => g.status === 'active').length);
-    check('set_goal tool ran and wrote goals.json', activeAfter === activeBefore + 1, `${activeBefore} → ${activeAfter}`);
+    check('set_goal tool ran and wrote goals.json (§5.3 data reflects it)', activeAfter === activeBefore + 1, `${activeBefore} → ${activeAfter}`);
     check('tool call surfaced in chat UI', /goal/i.test(toolText), toolText.slice(0, 48));
-    // UI reflects the write: Me view shows the new goal count (Retire buttons).
-    await page.locator('#nav .nav-item').nth(4).click();
-    await page.waitForTimeout(200);
-    const retireButtons = await page.locator('#view button', { hasText: 'Retire' }).count();
-    check('Me view reflects the new goal (§5.3 "UI reflects it")', retireButtons === activeAfter, `${retireButtons} goal rows`);
 
-    section('Goal-linked plans surface in the UI');
-    await page.locator('#nav .nav-item').nth(1).click();
-    await page.waitForTimeout(200);
-    check('Training view shows the goal-linked training block', (await page.locator('#view', { hasText: 'Training block' }).count()) > 0);
-    await page.locator('#nav .nav-item').nth(4).click();
-    await page.waitForTimeout(200);
-    check('Me view shows the fuelling plan', (await page.locator('#view', { hasText: 'Fuelling' }).count()) > 0);
+    section('In-chat plan confirmation → Google Calendar queue (§3.3, §1.5)');
+    const cards = await page.locator('.confirm-card').count();
+    check('pending plans surface as inline confirm cards', cards > 0, `${cards} cards`);
+    const qBefore = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.calendarQueue)).queue.length);
+    await page.locator('.confirm-card .btn-accent').first().click();
+    await page.waitForTimeout(300);
+    const qAfter = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.calendarQueue)).queue.length);
+    check('confirming a plan queues a calendar event', qAfter === qBefore + 1, `${qBefore} → ${qAfter}`);
 
     section('App renders offline with the network disabled (§5.3)');
     await page.evaluate(() => navigator.serviceWorker.ready).catch(() => {});
@@ -244,9 +239,8 @@ async function checkBrowser() {
     const offErrorsBefore = errors.length;
     await page.reload({ waitUntil: 'load' });
     const booted = await page.waitForFunction(() => window.__booted === true, { timeout: 10000 }).then(() => true).catch(() => false);
-    const navCount = await page.locator('#nav .nav-item').count();
-    const viewRendered = await page.locator('.view-title').count();
-    check('service worker serves the shell offline', booted && navCount === 5 && viewRendered >= 1, `booted=${booted}, nav=${navCount}`);
+    const composerOffline = await page.locator('.chat-composer').count();
+    check('service worker serves the shell offline', booted && composerOffline === 1, `booted=${booted}, composer=${composerOffline}`);
     check('no new errors while offline', errors.length === offErrorsBefore, errors.slice(offErrorsBefore).join(' | '));
     await context.setOffline(false);
 

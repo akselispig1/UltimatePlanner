@@ -51,11 +51,8 @@ const PRECACHE = [
   './src/features/calendar-queue.js',
   './src/features/goals.js',
   './src/features/balancer.js',
-  './src/views/today.js',
-  './src/views/training.js',
-  './src/views/school.js',
   './src/views/chat.js',
-  './src/views/me.js',
+  './src/views/settings.js',
 ];
 
 self.addEventListener('install', (event) => {

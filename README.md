@@ -15,10 +15,12 @@ This repo now contains the built PWA. It runs **fully on realistic demo data wit
 ```bash
 npm install     # dev-only: Playwright, used by the check
 npm start       # serve at http://localhost:5173
-npm run check   # headless self-verification (§5.3) — 29 assertions
+npm run check   # headless self-verification (§5.3) — 36 assertions
 ```
 
-Open the URL on a phone (or a 390×844 viewport). Bottom nav: **Today · Training · School · Chat · Me**. Chat is the main way in — it streams, takes photos, and drives the six tools against real JSON. The amber **DEMO DATA** bar shows until you connect keys.
+Open the URL on a phone (or a 390×844 viewport). **The app is a single chat** — there are no dashboard tabs. You talk to the bot about training, school, sleep, food and goals; it streams replies, takes photos, drives eight tools against real JSON, and puts the plan on your **Google Calendar** (the output surface). Plans awaiting your OK appear as inline **Confirm/Discard** cards. A gear (⚙) in the header opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
+
+> Interface note: the original spec (§4) sketched a five-tab dashboard (Today/Training/School/Chat/Me). Per the owner's direction the app was collapsed to **chat-only** — which is what §1 always asked for ("the chatbot is the primary input surface… prefer adding a tool over a new screen", "Google Calendar is the primary output surface"). Info you'd have read on a dashboard you now get by asking the bot or by looking at your calendar.
 
 - **Connecting real integrations:** [SETUP.md](SETUP.md) — one section per integration, easiest first (Anthropic → GitHub PAT → Google Calendar → Strava → Apple Health → Schoology). Each flips its own adapter from mock to live independently.
 - **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflows (calendar drain, Strava poll, Schoology pull, nightly Balancer).
@@ -306,20 +308,19 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 
 ## Status — what works vs stubbed
 
-**Works today, fully verifiable in mock mode (`npm run check` — 29/29 passing):**
+**Works today, fully verifiable in mock mode (`npm run check` — 36/36 passing):**
 
-- PWA shell — manifest, service worker, **offline render**, home-screen install metadata, dark Garmin styling, safe-area insets, 390×844.
-- Bottom nav + all five views rendering realistic now-relative fixtures (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, trips).
-- **Chat** — conversation UI, streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**.
-- **All six tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`.
-- **Goals** — create/edit/retire; progress computed from data (never asserted).
-- **Goal-linked plans (talk them through in Chat)** — `set_training_block` builds a structured, progressive multi-week training block (base → build → taper) tied to a goal, shown on the Training tab; `set_fuelling_plan` builds a fuelling plan (how to eat to support training and school) shown on the Me tab. A "diet plan" request is reframed as fuelling and sanitised against §3.5 (no calories, no goal weight, no good/bad food) at the tool boundary.
-- **Training** — plan CRUD via tools, completion matching against activities, rolling 7/28-day load + chart, missed-session flagging (never auto-stacked).
-- **Calendar queue** — intents written, in-app drain against the mock calendar marks entries `done`; idempotent.
+- **Chat-only PWA shell** — a single full-screen conversation, no dashboard tabs; header with a setup gear; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
+- **Chat** — streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**; an on-open briefing; realistic now-relative fixtures behind it (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, a trip).
+- **Eight tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`, `set_training_block`, `set_fuelling_plan`.
+- **Goals talked through the bot** — create/edit/retire; progress computed from data (never asserted).
+- **Goal-linked plans** — `set_training_block` builds a progressive multi-week block (base → build → taper) tied to a goal; `set_fuelling_plan` builds a fuelling plan. A "diet plan" request is reframed as fuelling and sanitised against §3.5 (no calories, no goal weight, no good/bad food) at the tool boundary. Plans surface as Google-Calendar events (via the Balancer/queue) and in the bot's replies.
+- **Google Calendar as the output surface** — everything the app decides becomes a queued calendar intent; the drain marks entries `done` (idempotent). Plans awaiting your OK appear as **inline Confirm/Discard cards in the chat** (§3.3).
+- **Training** — plan edits via tools, completion matching against activities, rolling load, missed-session flagging (never auto-stacked) — surfaced conversationally.
 - **Study blocks** — generated from assignments, sized by weight, placed in free time; proven never to overlap fixed commitments.
-- **Setup screen** — per-integration connected/not-connected status; key entry (never displayed/logged); clear-all wipes keys + unregisters the SW.
+- **Setup (gear → modal)** — per-integration connected/not-connected status; key entry (never displayed/logged); clear-all wipes keys + unregisters the SW.
 - **Nutrition rules** enforced verbatim in the system prompt and mirrored in `CLAUDE.md`; weight is a number + trend only; restriction language surfaces a gentle parent/coach prompt.
-- **The Balancer** and **social review queue** logic run in-app.
+- **The Balancer** and **social confirmation** logic run in-app.
 - Adapters: every service has signature-identical `mock.js`/`live.js`; selection is automatic on a key appearing.
 
 **Stubbed / awaiting real credentials (unverifiable here, templated for when keys go in):**

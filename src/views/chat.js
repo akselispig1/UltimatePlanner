@@ -1,21 +1,30 @@
-// Chat view (§3.6, §4). Full-screen conversation: streaming replies, tool calls
-// as thin inline rows, photo attach + compress, and persisted history. Manages
-// its own DOM so streaming doesn't trigger a full re-render.
+// Chat — the whole app (§1: chat is the primary input, Google Calendar the
+// primary output). Full-screen conversation: streaming replies, tool-call rows,
+// photo attach + compress, persisted history, and inline confirmations for
+// pending plans. Manages its own DOM so streaming doesn't trigger a re-render.
 
 import { el, ICONS } from '../ui/dom.js';
 import { runChat, loadHistory } from '../chat.js';
 import { compressImage } from '../ui/image.js';
 import { hasAnthropicKey } from '../keys.js';
+import { enqueue } from '../features/calendar-queue.js';
+import { store } from '../storage.js';
+import { DATA_FILES } from '../config.js';
 
 export function render(app) {
   const root = el('div', { id: 'chat-view', class: 'fade-in' });
   const scroll = el('div', { class: 'chat-scroll' });
   root.appendChild(scroll);
 
-  // Load persisted history (last 20).
+  // On open: a short briefing + any plans awaiting confirmation, then history.
   loadHistory(app.now, 20).then((history) => {
+    const pending = (app.state?.social || []).filter((p) => p.status === 'pending');
     if (!history.length) {
-      scroll.appendChild(el('div', { class: 'empty' }, 'Ask about training, school, sleep or food. Send a photo of a meal or the scale. This is where goals get set.'));
+      scroll.appendChild(bubble('assistant', greeting(app, pending.length)));
+    }
+    if (pending.length) {
+      scroll.appendChild(el('div', { class: 'tool-row' }, el('span', {}, `${pending.length} plan${pending.length > 1 ? 's' : ''} to confirm — they become calendar blocks once you say yes:`)));
+      for (const p of pending) scroll.appendChild(confirmCard(app, p));
     }
     for (const m of history) {
       if (m.role === 'user') scroll.appendChild(bubble('user', m.text || '[photo]'));
@@ -24,7 +33,8 @@ export function render(app) {
         if (m.text) scroll.appendChild(bubble('assistant', m.text));
       }
     }
-    scrollDown(scroll);
+    if (!hasAnthropicKey()) scroll.appendChild(el('div', { class: 'banner info' }, 'Demo chat — canned replies with real tool calls. Add your Anthropic key via the ⚙ gear to go live.'));
+    scrollDown();
   });
 
   // Composer
@@ -33,7 +43,6 @@ export function render(app) {
   const composer = el('div', { class: 'chat-composer' }, fileInput, el('button', { class: 'icon-btn', title: 'Add photo', onClick: () => fileInput.click(), html: ICONS.camera }), textarea, el('button', { class: 'icon-btn btn-accent', title: 'Send', onClick: () => submit(app, scroll, textarea), html: ICONS.send }));
   root.appendChild(composer);
 
-  // Enter to send (Shift+Enter for newline)
   textarea.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -41,12 +50,42 @@ export function render(app) {
     }
   });
 
-  if (!hasAnthropicKey()) {
-    // Demo-mode note; chat still works on canned responses.
-    scroll.appendChild(el('div', { class: 'banner info', style: { marginTop: '4px' } }, 'Demo chat — canned responses with real tool calls. Add your Anthropic key in Me → Setup to go live.'));
-  }
-
   return root;
+}
+
+function greeting(app, pendingCount) {
+  const bits = ["I'm your planner — talk to me about training, school, sleep, food and goals, and I'll put the plan on your Google Calendar."];
+  if (pendingCount) bits.push(`You've got ${pendingCount} plan${pendingCount > 1 ? 's' : ''} to confirm below.`);
+  else bits.push('Try: "build me a training plan", "make a fuelling plan", or send a photo of a meal.');
+  return bits.join(' ');
+}
+
+// ---- inline confirmation card for a pending social plan (§3.3) ----
+function confirmCard(app, plan) {
+  const card = el('div', { class: 'confirm-card' });
+  card.appendChild(el('div', { class: 'row-main' }, plan.what));
+  card.appendChild(el('div', { class: 'row-sub' }, `${plan.who || ''}${plan.who ? ' · ' : ''}${(plan.when || '').replace('T', ' ')}${plan.where ? ' · ' + plan.where : ''}`));
+  if (plan.raw) card.appendChild(el('div', { class: 'row-sub muted' }, `“${plan.raw}”`));
+  const actions = el('div', { class: 'confirm-actions' });
+  const yes = el('button', { class: 'btn btn-accent btn-sm', onClick: () => decide(app, plan, true, card) }, 'Confirm');
+  const no = el('button', { class: 'btn btn-ghost btn-sm', onClick: () => decide(app, plan, false, card) }, 'Discard');
+  actions.appendChild(yes);
+  actions.appendChild(no);
+  card.appendChild(actions);
+  return card;
+}
+
+async function decide(app, plan, confirmed, card) {
+  const data = await store.read(DATA_FILES.socialQueue);
+  const p = data.plans.find((x) => x.id === plan.id);
+  if (p) p.status = confirmed ? 'confirmed' : 'discarded';
+  await store.write(DATA_FILES.socialQueue, data);
+  if (confirmed) {
+    await enqueue(store, { action: 'create', event: { title: plan.what, date: (plan.when || '').slice(0, 10), start: (plan.when || '').slice(11, 16) || '18:00', durationMin: 120, kind: 'social' } });
+  }
+  // Update the card in place — no full re-render.
+  card.replaceChildren(el('div', { class: 'tool-row' }, el('span', { class: 'tick' }, confirmed ? '✓' : '✕'), el('span', {}, confirmed ? `Confirmed "${plan.what}" — added to your calendar.` : `Discarded "${plan.what}".`)));
+  await app.reloadState();
 }
 
 function bubble(role, text) {
@@ -58,11 +97,10 @@ function toolRow(summary) {
 function typingRow() {
   return el('div', { class: 'typing' }, el('span', {}, '●'), el('span', {}, '●'), el('span', {}, '●'));
 }
-function scrollDown(scroll) {
+function scrollDown() {
   requestAnimationFrame(() => {
     const view = document.getElementById('view');
     if (view) view.scrollTop = view.scrollHeight;
-    window.scrollTo(0, document.body.scrollHeight);
   });
 }
 function autoGrow(e) {
@@ -95,7 +133,6 @@ async function onPhoto(e, app, scroll, textarea) {
 }
 
 async function send(app, scroll, { text, image }) {
-  // user bubble (with optional photo preview)
   const ub = el('div', { class: 'bubble user' });
   if (image) ub.appendChild(el('img', { src: image.previewUrl, alt: 'photo' }));
   if (text) ub.appendChild(el('div', {}, text));
@@ -103,7 +140,7 @@ async function send(app, scroll, { text, image }) {
 
   const typing = typingRow();
   scroll.appendChild(typing);
-  scrollDown(scroll);
+  scrollDown();
 
   let current = null;
   const onText = (delta) => {
@@ -113,13 +150,13 @@ async function send(app, scroll, { text, image }) {
       scroll.appendChild(current);
     }
     current.textContent += delta;
-    scrollDown(scroll);
+    scrollDown();
   };
   const onTool = ({ summary }) => {
     if (typing.parentNode) typing.remove();
-    current = null; // next text starts a fresh bubble after the tool row
+    current = null;
     scroll.appendChild(toolRow(summary));
-    scrollDown(scroll);
+    scrollDown();
   };
 
   try {
@@ -129,16 +166,15 @@ async function send(app, scroll, { text, image }) {
     if (res.safety) scroll.appendChild(el('div', { class: 'banner warn' }, res.safety));
   } catch (err) {
     if (typing.parentNode) typing.remove();
-    const msg = describeError(err);
-    scroll.appendChild(bubble('assistant', '⚠️ ' + msg));
+    scroll.appendChild(bubble('assistant', '⚠️ ' + describeError(err)));
   }
-  scrollDown(scroll);
+  scrollDown();
   await app.reloadState();
 }
 
 function describeError(err) {
   const m = String(err && err.message ? err.message : err);
-  if (/401|403|invalid/i.test(m)) return 'Your Anthropic key was rejected. Check it in Me → Setup.';
+  if (/401|403|invalid/i.test(m)) return 'Your Anthropic key was rejected — check it via the ⚙ gear.';
   if (/Failed to fetch|network/i.test(m)) return "Can't reach the API — you may be offline.";
   return 'Something went wrong: ' + m;
 }
