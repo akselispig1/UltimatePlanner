@@ -8,11 +8,17 @@ import { store } from './storage.js';
 import { DATA_FILES } from './config.js';
 import { isDemoMode } from './keys.js';
 import * as chat from './views/chat.js';
+import * as food from './views/food.js';
 import { openSettings } from './views/settings.js';
+
+// The app is chat-first. The one extra page is Food & fuelling — meal advice
+// doesn't belong on a calendar (§3.5). Everything else stays in chat.
+const ROUTES = { chat: chat.render, food: food.render };
 
 export const App = {
   state: null,
   now: new Date(),
+  route: 'chat',
 
   async reloadState() {
     this.state = await gatherState(this.now);
@@ -26,12 +32,20 @@ export const App = {
     if (!view) return;
     clear(view);
     try {
-      view.appendChild(chat.render(this));
+      view.appendChild((ROUTES[this.route] || ROUTES.chat)(this));
     } catch (err) {
       // Never a blank screen or silent catch (§5.3).
-      view.appendChild(el('div', { class: 'banner warn' }, `The chat hit an error: ${err.message}`));
-      console.error('[chat error]', err);
+      view.appendChild(el('div', { class: 'banner warn' }, `This screen hit an error: ${err.message}`));
+      console.error('[view error]', this.route, err);
     }
+  },
+
+  navigate(route) {
+    if (!ROUTES[route]) return;
+    this.route = route;
+    this.render();
+    const view = document.getElementById('view');
+    if (view) view.scrollTop = 0;
   },
 
   async refresh() {
@@ -50,8 +64,12 @@ function renderHeader() {
   const bar = document.getElementById('topbar');
   if (!bar) return;
   clear(bar);
-  bar.appendChild(el('div', { class: 'brand' }, 'Life Balancer'));
-  bar.appendChild(el('button', { class: 'icon-btn gear', title: 'Setup', onClick: () => openSettings(App), html: ICONS.settings }));
+  bar.appendChild(el('button', { class: 'brand', onClick: () => App.navigate('chat') }, 'Life Balancer'));
+  const actions = el('div', { class: 'topbar-actions' });
+  const onFood = App.route === 'food';
+  actions.appendChild(el('button', { class: `icon-btn hdr ${onFood ? 'active' : ''}`.trim(), title: onFood ? 'Back to chat' : 'Food & fuelling', onClick: () => App.navigate(onFood ? 'chat' : 'food'), html: ICONS.food }));
+  actions.appendChild(el('button', { class: 'icon-btn hdr', title: 'Setup', onClick: () => openSettings(App), html: ICONS.settings }));
+  bar.appendChild(actions);
 }
 
 function updateDemoBar() {

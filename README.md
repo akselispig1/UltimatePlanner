@@ -15,10 +15,10 @@ This repo now contains the built PWA. It runs **fully on realistic demo data wit
 ```bash
 npm install     # dev-only: Playwright, used by the check
 npm start       # serve at http://localhost:5173
-npm run check   # headless self-verification (§5.3) — 36 assertions
+npm run check   # headless self-verification (§5.3) — 43 assertions
 ```
 
-Open the URL on a phone (or a 390×844 viewport). **The app is a single chat** — there are no dashboard tabs. You talk to the bot about training, school, sleep, food and goals; it streams replies, takes photos, drives eight tools against real JSON, and puts the plan on your **Google Calendar** (the output surface). Plans awaiting your OK appear as inline **Confirm/Discard** cards. A gear (⚙) in the header opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
+Open the URL on a phone (or a 390×844 viewport). **The app is chat-first** — no dashboard tabs. You talk to the bot about training, school, sleep, food and goals; it streams replies, takes photos, drives eight tools against real JSON, and puts the plan on your **Google Calendar** (the output surface). Plans awaiting your OK appear as inline **Confirm/Discard** cards. There is **one** extra page — **Food & fuelling** (a fork icon in the header) — where meal advice, your fuelling plan and weight trend collect, since food advice doesn't belong on a calendar (§3.5). A gear (⚙) opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
 
 > Interface note: the original spec (§4) sketched a five-tab dashboard (Today/Training/School/Chat/Me). Per the owner's direction the app was collapsed to **chat-only** — which is what §1 always asked for ("the chatbot is the primary input surface… prefer adding a tool over a new screen", "Google Calendar is the primary output surface"). Info you'd have read on a dashboard you now get by asking the bot or by looking at your calendar.
 
@@ -308,9 +308,9 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 
 ## Status — what works vs stubbed
 
-**Works today, fully verifiable in mock mode (`npm run check` — 36/36 passing):**
+**Works today, fully verifiable in mock mode (`npm run check` — 43/43 passing):**
 
-- **Chat-only PWA shell** — a single full-screen conversation, no dashboard tabs; header with a setup gear; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
+- **Chat-first PWA shell** — a full-screen conversation plus one **Food & fuelling** page (meal advice + weight trend, §3.5); header with food + setup icons; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
 - **Chat** — streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**; an on-open briefing; realistic now-relative fixtures behind it (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, a trip).
 - **Eight tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`, `set_training_block`, `set_fuelling_plan`.
 - **Goals talked through the bot** — create/edit/retire; progress computed from data (never asserted).

@@ -70,9 +70,11 @@ body {
 }
 /* When the amber demo bar is hidden, the top bar owns the safe-area inset. */
 :root:has(#demo-bar.hidden) #topbar { padding-top: calc(10px + var(--safe-top)); }
-.brand { font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
-.icon-btn.gear { width: 38px; height: 38px; background: transparent; border: none; color: var(--muted); }
-.icon-btn.gear:active { color: var(--text); }
+.brand { font-weight: 800; font-size: 17px; letter-spacing: -0.01em; color: var(--text); background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; }
+.topbar-actions { display: flex; align-items: center; gap: 2px; }
+.icon-btn.hdr { width: 38px; height: 38px; background: transparent; border: none; color: var(--muted); }
+.icon-btn.hdr.active { color: var(--accent); }
+.icon-btn.hdr:active { color: var(--text); }
 .view-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 2px; }
 .view-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
 .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 700; margin: 20px 2px 10px; }

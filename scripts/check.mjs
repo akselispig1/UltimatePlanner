@@ -138,6 +138,18 @@ async function checkPlans() {
   check('fuelling plan has real guidance', afterF.fuellingPlans.length > 0 && (afterF.fuellingPlans[0].days || []).length > 0);
 }
 
+async function checkNutrition() {
+  section('Meal photo → advice logged to the Food page (§3.5)');
+  const png1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const before = (await store.read(DATA_FILES.logs)).entries.filter((e) => e.kind === 'nutrition').length;
+  await runChat({ userText: '', image: { mediaType: 'image/png', dataBase64: png1x1 }, now: new Date() });
+  const entries = (await store.read(DATA_FILES.logs)).entries.filter((e) => e.kind === 'nutrition');
+  check('sending a meal photo logs a nutrition note', entries.length === before + 1, `${before} → ${entries.length}`);
+  const last = entries[entries.length - 1] || {};
+  const bad = FORBIDDEN_FUELLING.filter((w) => (last.text || '').toLowerCase().includes(w));
+  check('the logged note is adequacy-framed (no restriction language)', bad.length === 0, bad.join(', '));
+}
+
 function intervalOf(b) {
   const [h, m] = b.start.split(':').map(Number);
   return { start: h * 60 + m, end: h * 60 + m + b.durationMin };
@@ -204,8 +216,8 @@ async function checkBrowser() {
     check('no dashboard nav (chat-only)', (await page.locator('#nav').count()) === 0);
     check('header brand present', (await page.locator('#topbar .brand').count()) === 1);
     check('demo bar visible in mock mode', (await page.locator('#demo-bar:not(.hidden)').count()) === 1);
-    // Setup is reachable via the gear (§1.4) — the only non-chat surface.
-    await page.locator('.icon-btn.gear').click();
+    // Setup is reachable via the gear (§1.4).
+    await page.locator('.icon-btn.hdr[title="Setup"]').click();
     await page.waitForTimeout(200);
     check('setup modal opens from the gear', (await page.locator('.modal-sheet').count()) === 1);
     await page.locator('.modal-head button').click();
@@ -222,6 +234,19 @@ async function checkBrowser() {
     const activeAfter = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.goals)).goals.filter((g) => g.status === 'active').length);
     check('set_goal tool ran and wrote goals.json (§5.3 data reflects it)', activeAfter === activeBefore + 1, `${activeBefore} → ${activeAfter}`);
     check('tool call surfaced in chat UI', /goal/i.test(toolText), toolText.slice(0, 48));
+
+    section('Food & fuelling page (§3.5 — not on the calendar)');
+    await page.locator('.icon-btn.hdr').first().click(); // food toggle
+    await page.waitForTimeout(200);
+    check('Food page opens from the header', (await page.locator('#view', { hasText: 'Food & fuelling' }).count()) > 0);
+    check('Food page shows the fuelling plan', (await page.locator('#view', { hasText: 'Fuelling plan' }).count()) > 0);
+    check('Food page shows the weight trend', (await page.locator('#view', { hasText: '30-day trend' }).count()) > 0);
+    // Meal advice notes surface here (the photo→note flow is proven in Node below).
+    const nutritionNotes = await page.evaluate(async () => (await window.__store.read(window.__DATA_FILES.logs)).entries.filter((e) => e.kind === 'nutrition').length);
+    check('Food page lists meal advice notes', nutritionNotes > 0, `${nutritionNotes} notes`);
+    await page.locator('.icon-btn.hdr').first().click(); // back to chat
+    await page.waitForTimeout(150);
+    check('header toggles back to chat', (await page.locator('.chat-composer').count()) === 1);
 
     section('In-chat plan confirmation → Google Calendar queue (§3.3, §1.5)');
     const cards = await page.locator('.confirm-card').count();
@@ -259,6 +284,7 @@ async function main() {
   await checkQueueDrain();
   checkStudyOverlap();
   await checkPlans();
+  await checkNutrition();
   await checkNoSecrets();
   try {
     await checkBrowser();

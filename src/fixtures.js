@@ -202,6 +202,8 @@ export function chatResponses() {
       match: ['eat', 'food', 'plate', 'lunch', 'dinner', 'meal'],
       steps: [
         { text: "Looks like rice, chicken and some salad — a solid base. You've got a long ride tomorrow, so you'll want more carbs than a normal day: add a banana or a slice of bread now and top up with a yoghurt this evening." },
+        { tool: 'log_entry', input: { kind: 'nutrition', text: 'Rice, chicken, salad — solid base. Added carbs before tomorrow’s long ride; yoghurt in the evening.' } },
+        { text: "I've saved that to your Food page." },
       ],
     },
     {

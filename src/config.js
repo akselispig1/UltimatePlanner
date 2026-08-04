@@ -57,6 +57,7 @@ export function buildSystemPrompt() {
     `- Goals are the anchor. When the user wants a richer plan, tie it to a goal (create one with set_goal first if needed) and reference the goal's target and deadline.`,
     `- Use set_training_block to build a structured, progressive multi-week training block (each week has a focus and its sessions). Work back from the goal's deadline: build base first, then intensity, then a taper. Base it on the user's real recent load and sleep from the snapshot; don't overreach after poor sleep.`,
     `- Use set_fuelling_plan for food guidance. A fuelling plan is guidance for eating to support training and school — NOT a diet. It must obey every nutrition rule below: frame everything around adequacy and performance (more carbs before big sessions, protein at each meal, recovery snacks), and never include calorie targets, macros as percentages, a goal weight, or good/bad food language.`,
+    `- After giving feedback on a meal photo, record a one-line note with log_entry (kind "nutrition") so it appears on the Food page. Read a scale photo's number and log it with log_entry (kind "weight") — number and trend only.`,
     `- Confirm training-block and goal changes in the conversation before writing.`,
     ``,
     NUTRITION_RULES,

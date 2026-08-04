@@ -87,13 +87,15 @@ scripts/check.mjs                                      npm run check (§5.3)
 data-repo-template/                                    workflows for the private data repo
 ```
 
-**The app is chat-only.** Per the owner's direction there are no dashboard tabs
-— the single surface is `views/chat.js` (conversation + inline plan
-confirmations), plus `views/settings.js` (a modal for keys, opened from the
-header gear). This is what §1 always asked for: chat is the primary input,
-Google Calendar the primary output. Info that a dashboard would show is answered
-by the bot or read from the calendar. Don't reintroduce standalone screens —
-add a tool or surface it in chat.
+**The app is chat-first.** Per the owner's direction there are no dashboard tabs.
+The primary surface is `views/chat.js` (conversation + inline plan confirmations).
+There is **one** extra page, `views/food.js` (Food & fuelling), reached from a
+header icon — meal advice and the weight trend don't belong on a calendar (§3.5),
+so they live there. Keys live in `views/settings.js` (a modal opened from the
+header gear). This matches §1: chat is the primary input, Google Calendar the
+primary output. Info a dashboard would show is answered by the bot or read from
+the calendar. Don't add further standalone screens — add a tool or surface it in
+chat, and keep nutrition on the Food page.
 
 ## Testing
 

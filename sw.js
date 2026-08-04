@@ -52,6 +52,7 @@ const PRECACHE = [
   './src/features/goals.js',
   './src/features/balancer.js',
   './src/views/chat.js',
+  './src/views/food.js',
   './src/views/settings.js',
 ];
 
