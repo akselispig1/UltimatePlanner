@@ -251,6 +251,12 @@ a { color: var(--accent); }
 }
 .confirm-actions { display: flex; gap: 8px; margin-top: 10px; }
 
+/* ---- "Today's fuelling" hero card on the Food page ---- */
+.fuel-today {
+  background: linear-gradient(180deg, rgba(0, 169, 224, 0.10), rgba(0, 169, 224, 0.03));
+  border-color: rgba(0, 169, 224, 0.3);
+}
+
 /* ---- settings modal ---- */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 100;

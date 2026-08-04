@@ -15,7 +15,7 @@ This repo now contains the built PWA. It runs **fully on realistic demo data wit
 ```bash
 npm install     # dev-only: Playwright, used by the check
 npm start       # serve at http://localhost:5173
-npm run check   # headless self-verification (§5.3) — 43 assertions
+npm run check   # headless self-verification (§5.3) — 46 assertions
 ```
 
 Open the URL on a phone (or a 390×844 viewport). **The app is chat-first** — no dashboard tabs. You talk to the bot about training, school, sleep, food and goals; it streams replies, takes photos, drives eight tools against real JSON, and puts the plan on your **Google Calendar** (the output surface). Plans awaiting your OK appear as inline **Confirm/Discard** cards. There is **one** extra page — **Food & fuelling** (a fork icon in the header) — where meal advice, your fuelling plan and weight trend collect, since food advice doesn't belong on a calendar (§3.5). A gear (⚙) opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
@@ -308,13 +308,14 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 
 ## Status — what works vs stubbed
 
-**Works today, fully verifiable in mock mode (`npm run check` — 43/43 passing):**
+**Works today, fully verifiable in mock mode (`npm run check` — 46/46 passing):**
 
 - **Chat-first PWA shell** — a full-screen conversation plus one **Food & fuelling** page (meal advice + weight trend, §3.5); header with food + setup icons; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
 - **Chat** — streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**; an on-open briefing; realistic now-relative fixtures behind it (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, a trip).
 - **Eight tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`, `set_training_block`, `set_fuelling_plan`.
 - **Goals talked through the bot** — create/edit/retire; progress computed from data (never asserted).
 - **Goal-linked plans** — `set_training_block` builds a progressive multi-week block (base → build → taper) tied to a goal; `set_fuelling_plan` builds a fuelling plan. A "diet plan" request is reframed as fuelling and sanitised against §3.5 (no calories, no goal weight, no good/bad food) at the tool boundary. Plans surface as Google-Calendar events (via the Balancer/queue) and in the bot's replies.
+- **Food & fuelling page** — leads with a **"Today's fuelling"** card computed from your real training + last night's sleep (answers "what should I eat today?", updates daily, §3.5-safe); then meal advice logged from chat photos, the fuelling plan, and a 30-day weight trend (number + trend only).
 - **Google Calendar as the output surface** — everything the app decides becomes a queued calendar intent; the drain marks entries `done` (idempotent). Plans awaiting your OK appear as **inline Confirm/Discard cards in the chat** (§3.3).
 - **Training** — plan edits via tools, completion matching against activities, rolling load, missed-session flagging (never auto-stacked) — surfaced conversationally.
 - **Study blocks** — generated from assignments, sized by weight, placed in free time; proven never to overlap fixed commitments.

@@ -4,14 +4,24 @@
 // more — no calories, no goal weight).
 
 import { el, card, sparkline, fmtDay } from '../ui/dom.js';
-import { weightTrend } from '../features/nutrition.js';
+import { weightTrend, dailyFuelling } from '../features/nutrition.js';
 
 export function render(app) {
   const s = app.state;
   const now = app.now;
   const root = el('div', { class: 'fade-in' });
   root.appendChild(el('div', { class: 'view-title' }, 'Food & fuelling'));
-  root.appendChild(el('div', { class: 'view-sub' }, 'Send meal or scale photos in chat — the advice lands here.'));
+  root.appendChild(el('div', { class: 'view-sub' }, 'What today needs, plus advice from the photos you send in chat.'));
+
+  // Today's fuelling — the answer to "what should I eat today?", from your real
+  // training + last night's sleep. Updates on its own each day (§3.5).
+  const fuel = dailyFuelling({ plan: s.plan, sleep: s.sleep, now });
+  const todayCard = el('div', { class: 'card fuel-today' });
+  todayCard.appendChild(el('div', { class: 'stat-label' }, "Today's fuelling"));
+  todayCard.appendChild(el('div', { class: 'row-main', style: { fontSize: '17px', margin: '4px 0 6px' } }, fuel.title));
+  todayCard.appendChild(el('div', {}, fuel.detail));
+  if (fuel.tomorrowCue) todayCard.appendChild(el('div', { class: 'row-sub accent', style: { marginTop: '8px' } }, fuel.tomorrowCue));
+  root.appendChild(todayCard);
 
   // Recent meal advice / notes, newest first (logged by the chatbot).
   const notes = (s.logs || []).filter((e) => e.kind === 'nutrition').sort((a, b) => (a.at < b.at ? 1 : -1));

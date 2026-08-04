@@ -20,7 +20,7 @@ import { generateStudyBlocks } from '../src/features/school.js';
 import { fixedCommitments, overlaps } from '../src/features/schedule.js';
 import { drainQueue, enqueue } from '../src/features/calendar-queue.js';
 import { runChat } from '../src/chat.js';
-import { FORBIDDEN_FUELLING } from '../src/features/nutrition.js';
+import { FORBIDDEN_FUELLING, dailyFuelling } from '../src/features/nutrition.js';
 import * as fx from '../src/fixtures.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -148,6 +148,24 @@ async function checkNutrition() {
   const last = entries[entries.length - 1] || {};
   const bad = FORBIDDEN_FUELLING.filter((w) => (last.text || '').toLowerCase().includes(w));
   check('the logged note is adequacy-framed (no restriction language)', bad.length === 0, bad.join(', '));
+
+  // "Today's fuelling" is computed from real training + sleep, on any weekday,
+  // and must never contain restriction language.
+  section("Today's fuelling is data-driven and §3.5-safe");
+  const plan = fx.trainingPlan();
+  const sleepData = fx.sleep();
+  let anyForbidden = [];
+  let allHaveDetail = true;
+  for (let off = 0; off < 7; off++) {
+    const at = new Date();
+    at.setDate(at.getDate() + off);
+    const f = dailyFuelling({ plan, sleep: sleepData, now: at });
+    const text = `${f.title} ${f.detail} ${f.tomorrowCue || ''}`.toLowerCase();
+    anyForbidden = anyForbidden.concat(FORBIDDEN_FUELLING.filter((w) => text.includes(w)));
+    if (!f.title || !f.detail) allHaveDetail = false;
+  }
+  check("every day produces a fuelling suggestion with real detail", allHaveDetail);
+  check("no day's fuelling contains calorie/goal-weight/restriction language", anyForbidden.length === 0, [...new Set(anyForbidden)].join(', '));
 }
 
 function intervalOf(b) {
@@ -239,6 +257,7 @@ async function checkBrowser() {
     await page.locator('.icon-btn.hdr').first().click(); // food toggle
     await page.waitForTimeout(200);
     check('Food page opens from the header', (await page.locator('#view', { hasText: 'Food & fuelling' }).count()) > 0);
+    check("Food page leads with today's fuelling", (await page.locator('.fuel-today').count()) === 1);
     check('Food page shows the fuelling plan', (await page.locator('#view', { hasText: 'Fuelling plan' }).count()) > 0);
     check('Food page shows the weight trend', (await page.locator('#view', { hasText: '30-day trend' }).count()) > 0);
     // Meal advice notes surface here (the photo→note flow is proven in Node below).
