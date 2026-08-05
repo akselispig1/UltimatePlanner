@@ -1,0 +1,35 @@
+name: Deploy PWA to GitHub Pages
+# The PWA is static (plain ES modules, no build step — §1). Deploy the repo as-is.
+# All asset paths are relative ("./…") so it works under the /life-balancer/ subpath.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage site (exclude tooling not needed at runtime)
+        run: |
+          mkdir -p _site
+          cp -r index.html styles.css manifest.webmanifest sw.js src fixtures icons _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

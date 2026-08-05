@@ -1,0 +1,19 @@
+{
+  "integrations": {
+    "anthropic": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "github": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    },
+    "calendar": {
+      "connected": false,
+      "lastSync": null,
+      "lastError": null
+    }
+  }
+}

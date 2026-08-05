@@ -1,0 +1,37 @@
+name: calendar-sync
+# Drains data/calendar-queue.json to Google Calendar every 15 minutes (§1.5).
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: calendar-sync
+  cancel-in-progress: false
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout with a PAT so our own commits count as repo activity and the
+      # schedule doesn't auto-disable after 60 days (§1.6).
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DATA_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Drain calendar queue
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+        run: node scripts/drain-calendar.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "life-balancer-bot"
+          git config user.email "life-balancer-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "calendar-sync [skip ci]"
+          git push
