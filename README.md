@@ -15,16 +15,16 @@ This repo now contains the built PWA. It runs **fully on realistic demo data wit
 ```bash
 npm install     # dev-only: Playwright, used by the check
 npm start       # serve at http://localhost:5173
-npm run check   # headless self-verification (§5.3) — 46 assertions
+npm run check   # headless self-verification — 26 assertions
 ```
 
-Open the URL on a phone (or a 390×844 viewport). **The app is chat-first** — no dashboard tabs. You talk to the bot about training, school, sleep, food and goals; it streams replies, takes photos, drives eight tools against real JSON, and puts the plan on your **Google Calendar** (the output surface). Plans awaiting your OK appear as inline **Confirm/Discard** cards. There is **one** extra page — **Food & fuelling** (a fork icon in the header) — where meal advice, your fuelling plan and weight trend collect, since food advice doesn't belong on a calendar (§3.5). A gear (⚙) opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
+Open the URL on a phone (or a 390×844 viewport). **The app is a single chatbot with one job: putting things on your Google Calendar.** Tell it your training plan and it schedules the sessions; ask it to add your assignment due dates and study time; or just say "add football practice tomorrow at 5". It streams replies and shows each calendar write as a thin ✓ row. A gear (⚙) opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
 
-> Interface note: the original spec (§4) sketched a five-tab dashboard (Today/Training/School/Chat/Me). Per the owner's direction the app was collapsed to **chat-only** — which is what §1 always asked for ("the chatbot is the primary input surface… prefer adding a tool over a new screen", "Google Calendar is the primary output surface"). Info you'd have read on a dashboard you now get by asking the bot or by looking at your calendar.
+> Scope note: this started as a five-tab life dashboard (per the spec §4) and was **stripped all the way back** to a calendar scheduler at the owner's direction — no nutrition, goals, weight, recovery, or dashboards. It now does exactly what §1 asked for: the chatbot is the only input, Google Calendar the only output.
 
-- **Connecting real integrations:** [SETUP.md](SETUP.md) — one section per integration, easiest first (Anthropic → GitHub PAT → Google Calendar → Strava → Apple Health → Schoology). Each flips its own adapter from mock to live independently.
-- **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflows (calendar drain, Strava poll, Schoology pull, nightly Balancer).
-- **Nutrition safety rules + conventions:** [CLAUDE.md](CLAUDE.md).
+- **Connecting real integrations:** [SETUP.md](SETUP.md) — Anthropic (chat) → GitHub PAT (data) → Google Calendar (output) → Schoology (assignments). Each flips its own adapter from mock to live independently.
+- **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflows (calendar drain, Schoology pull).
+- **Conventions:** [CLAUDE.md](CLAUDE.md).
 - **What works vs what's still stubbed:** see [Status](#status--what-works-vs-stubbed) at the bottom.
 
 ---
@@ -308,25 +308,22 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 
 ## Status — what works vs stubbed
 
-**Works today, fully verifiable in mock mode (`npm run check` — 46/46 passing):**
+The app was **stripped back to a calendar scheduler** at the owner's direction — the nutrition/fuelling, goals, weight, recovery, Strava and dashboard features described elsewhere in this spec were removed. What remains:
 
-- **Chat-first PWA shell** — a full-screen conversation plus one **Food & fuelling** page (meal advice + weight trend, §3.5); header with food + setup icons; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
-- **Chat** — streaming, typing indicator, photo attach + client-side compress, history persistence, and the **full tool-use loop**; an on-open briefing; realistic now-relative fixtures behind it (6 wks activities with gaps, 6 wks sleep incl. bad nights, weight series, a dozen assignments, a trip).
-- **Eight tools** actually read/write JSON: `get_history`, `set_goal`, `adjust_training_plan`, `log_entry`, `queue_calendar_change`, `create_study_block`, `set_training_block`, `set_fuelling_plan`.
-- **Goals talked through the bot** — create/edit/retire; progress computed from data (never asserted).
-- **Goal-linked plans** — `set_training_block` builds a progressive multi-week block (base → build → taper) tied to a goal; `set_fuelling_plan` builds a fuelling plan. A "diet plan" request is reframed as fuelling and sanitised against §3.5 (no calories, no goal weight, no good/bad food) at the tool boundary. Plans surface as Google-Calendar events (via the Balancer/queue) and in the bot's replies.
-- **Food & fuelling page** — leads with a **"Today's fuelling"** card computed from your real training + last night's sleep (answers "what should I eat today?", updates daily, §3.5-safe); then meal advice logged from chat photos, the fuelling plan, and a 30-day weight trend (number + trend only).
-- **Google Calendar as the output surface** — everything the app decides becomes a queued calendar intent; the drain marks entries `done` (idempotent). Plans awaiting your OK appear as **inline Confirm/Discard cards in the chat** (§3.3).
-- **Training** — plan edits via tools, completion matching against activities, rolling load, missed-session flagging (never auto-stacked) — surfaced conversationally.
-- **Study blocks** — generated from assignments, sized by weight, placed in free time; proven never to overlap fixed commitments.
+**Works today, fully verifiable in mock mode (`npm run check` — 26/26 passing):**
+
+- **Single-chatbot PWA shell** — one full-screen conversation, a header with a setup gear, no other pages; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
+- **Chat** — streaming, typing indicator, persisted history, and the **full tool-use loop**; a greeting that explains what it does.
+- **Five calendar tools**, each reading/writing real JSON and stating what it scheduled: `adjust_training_plan`, `add_training_to_calendar`, `add_assignments_to_calendar`, `create_study_block`, `queue_calendar_change`.
+- **Training plan → calendar** — "put my training plan on my calendar" queues the week's sessions as dated events.
+- **Assignments → calendar** — "add my assignments" pulls open Schoology assignments and queues their DUE dates, optionally with **study blocks** placed in free time and proven never to overlap fixed commitments.
+- **One-off requests → calendar** — "add football practice tomorrow at 5" queues a single event.
+- **Google Calendar as the only output** — every decision becomes a queued intent; the drain marks entries `done` (idempotent).
 - **Setup (gear → modal)** — per-integration connected/not-connected status; key entry (never displayed/logged); clear-all wipes keys + unregisters the SW.
-- **Nutrition rules** enforced verbatim in the system prompt and mirrored in `CLAUDE.md`; weight is a number + trend only; restriction language surfaces a gentle parent/coach prompt.
-- **The Balancer** and **social confirmation** logic run in-app.
-- Adapters: every service has signature-identical `mock.js`/`live.js`; selection is automatic on a key appearing.
+- Adapters (schoology, calendar, anthropic): signature-identical `mock.js`/`live.js`; selection automatic on a key appearing.
 
 **Stubbed / awaiting real credentials (unverifiable here, templated for when keys go in):**
 
-- Live API calls — the `live.js` adapters and the `data-repo-template/` scripts (Google/Strava/Schoology OAuth, the drain and Balancer Actions) are written but need real secrets to exercise. The one-off OAuth helper scripts are provided.
-- Apple Health sleep — arrives via an iOS Shortcut you build (§3.4/§5.4); documented, not automatable from here.
+- Live API calls — the `live.js` adapters and the `data-repo-template/` scripts (Google Calendar drain, Schoology pull, their OAuth) are written but need real secrets to exercise. One-off OAuth helper scripts are provided.
 - Push notifications — Phase 7, intentionally not built (§5.5).
 - Manual device checks (real iOS home-screen install, live network-kill mid-session) — the automated offline + render checks cover the headless equivalents.

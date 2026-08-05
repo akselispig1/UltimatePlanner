@@ -4,7 +4,6 @@
 
 import { DATA_FILES } from './config.js';
 
-// type helpers
 const T = {
   string: (v) => typeof v === 'string',
   number: (v) => typeof v === 'number' && !Number.isNaN(v),
@@ -19,15 +18,12 @@ function checkType(value, type) {
   return T[type] ? T[type](value) : false;
 }
 
-// desc: { type, required?, props?, items?, enum? }
 function walk(value, desc, path, errors) {
   if (desc.type && !checkType(value, desc.type)) {
     errors.push(`${path}: expected ${JSON.stringify(desc.type)}, got ${value === null ? 'null' : typeof value}`);
     return;
   }
-  if (desc.enum && !desc.enum.includes(value)) {
-    errors.push(`${path}: "${value}" not in ${JSON.stringify(desc.enum)}`);
-  }
+  if (desc.enum && !desc.enum.includes(value)) errors.push(`${path}: "${value}" not in ${JSON.stringify(desc.enum)}`);
   if (desc.props && T.object(value)) {
     for (const [key, sub] of Object.entries(desc.props)) {
       const has = Object.prototype.hasOwnProperty.call(value, key);
@@ -38,9 +34,7 @@ function walk(value, desc, path, errors) {
       if (has) walk(value[key], sub, `${path}.${key}`, errors);
     }
   }
-  if (desc.items && T.array(value)) {
-    value.forEach((item, i) => walk(item, desc.items, `${path}[${i}]`, errors));
-  }
+  if (desc.items && T.array(value)) value.forEach((item, i) => walk(item, desc.items, `${path}[${i}]`, errors));
 }
 
 export function validate(value, schema) {
@@ -48,8 +42,6 @@ export function validate(value, schema) {
   walk(value, schema, schema.name || 'root', errors);
   return { valid: errors.length === 0, errors };
 }
-
-// ---- Schemas ----
 
 export const SCHEMAS = {
   [DATA_FILES.trainingPlan]: {
@@ -75,100 +67,6 @@ export const SCHEMAS = {
     },
   },
 
-  [DATA_FILES.goals]: {
-    name: 'goals',
-    type: 'object',
-    props: {
-      goals: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            title: { type: 'string', required: true },
-            type: { type: 'string', required: true, enum: ['performance', 'consistency', 'school', 'recovery'] },
-            target: { type: 'string', required: true },
-            deadline: { type: ['string', 'null'], required: true },
-            status: { type: 'string', enum: ['active', 'retired'] },
-          },
-        },
-      },
-    },
-  },
-
-  [DATA_FILES.plans]: {
-    name: 'plans',
-    type: 'object',
-    props: {
-      trainingBlocks: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            goalId: { type: ['string', 'null'], required: true },
-            title: { type: 'string', required: true },
-            createdAt: { type: 'string' },
-            summary: { type: 'string' },
-            weeks: {
-              type: 'array',
-              required: true,
-              items: {
-                type: 'object',
-                props: {
-                  week: { type: 'number', required: true },
-                  focus: { type: 'string', required: true },
-                  sessions: {
-                    type: 'array',
-                    required: true,
-                    items: {
-                      type: 'object',
-                      props: {
-                        day: { type: 'string', required: true, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
-                        type: { type: 'string', required: true },
-                        durationMin: { type: 'number', required: true },
-                        intensity: { type: 'string', required: true },
-                        note: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      fuellingPlans: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            goalId: { type: ['string', 'null'], required: true },
-            title: { type: 'string', required: true },
-            createdAt: { type: 'string' },
-            summary: { type: 'string' },
-            principles: { type: 'array', items: { type: 'string' } },
-            days: {
-              type: 'array',
-              required: true,
-              items: {
-                type: 'object',
-                props: {
-                  when: { type: 'string', required: true },
-                  guidance: { type: 'string', required: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-
   [DATA_FILES.calendarQueue]: {
     name: 'calendar-queue',
     type: 'object',
@@ -184,25 +82,6 @@ export const SCHEMAS = {
             event: { type: 'object', required: true },
             status: { type: 'string', required: true, enum: ['pending', 'done', 'error'] },
             resultEventId: { type: ['string', 'null'] },
-          },
-        },
-      },
-    },
-  },
-
-  [DATA_FILES.logs]: {
-    name: 'logs',
-    type: 'object',
-    props: {
-      entries: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            kind: { type: 'string', required: true, enum: ['nutrition', 'weight', 'subjective'] },
-            at: { type: 'string', required: true },
           },
         },
       },
@@ -231,32 +110,10 @@ export const SCHEMAS = {
     },
   },
 
-  [DATA_FILES.socialQueue]: {
-    name: 'social-queue',
-    type: 'object',
-    props: {
-      plans: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            what: { type: 'string', required: true },
-            when: { type: 'string', required: true },
-            status: { type: 'string', required: true, enum: ['pending', 'confirmed', 'discarded'] },
-          },
-        },
-      },
-    },
-  },
-
   [DATA_FILES.syncStatus]: {
     name: 'sync-status',
     type: 'object',
-    props: {
-      integrations: { type: 'object', required: true },
-    },
+    props: { integrations: { type: 'object', required: true } },
   },
 };
 

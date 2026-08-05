@@ -2,8 +2,8 @@
   {
     "id": "cal-trip-1",
     "title": "Geography field trip — Ticino",
-    "date": "2026-08-13",
-    "endDate": "2026-08-14",
+    "date": "2026-08-15",
+    "endDate": "2026-08-16",
     "allDay": true,
     "kind": "trip",
     "source": "schoology"
@@ -11,7 +11,7 @@
   {
     "id": "cal-sch-1",
     "title": "School day",
-    "date": "2026-08-04",
+    "date": "2026-08-06",
     "allDay": false,
     "start": "08:15",
     "end": "15:30",
@@ -21,7 +21,7 @@
   {
     "id": "cal-sch-2",
     "title": "School day",
-    "date": "2026-08-05",
+    "date": "2026-08-07",
     "allDay": false,
     "start": "08:15",
     "end": "15:30",

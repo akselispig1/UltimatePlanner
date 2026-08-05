@@ -20,11 +20,6 @@
       "lastSync": null,
       "lastError": null
     },
-    "health": {
-      "connected": false,
-      "lastSync": null,
-      "lastError": null
-    },
     "schoology": {
       "connected": false,
       "lastSync": null,

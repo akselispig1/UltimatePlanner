@@ -22,17 +22,8 @@ function userText(message) {
     .join(' ');
 }
 
-function hasImage(message) {
-  return Array.isArray(message.content) && message.content.some((b) => b.type === 'image');
-}
-
 function pickResponse(messages) {
   const firstUser = messages.find((m) => m.role === 'user');
-  const imagePresent = messages.some((m) => m.role === 'user' && hasImage(m));
-  if (imagePresent) {
-    const food = fx.chatResponses().find((r) => r.match.includes('food'));
-    if (food) return food;
-  }
   const text = (firstUser ? userText(firstUser) : '').toLowerCase();
   const matched = fx.chatResponses().find((r) => r.match.some((kw) => text.includes(kw)));
   return matched || fx.CHAT_FALLBACK;

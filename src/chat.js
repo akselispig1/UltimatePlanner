@@ -8,7 +8,6 @@ import { buildSystemPrompt } from './config.js';
 import { toolSchemas, runTool } from './tools.js';
 import { gatherState } from './app-data.js';
 import { buildSnapshot } from './context.js';
-import { restrictionCheck } from './features/nutrition.js';
 import { store } from './storage.js';
 import { monthKey } from './util/dates.js';
 
@@ -87,5 +86,5 @@ export async function runChat({ userText, image = null, onText, onTool, now = ne
     now
   );
 
-  return { finalText, toolCalls: toolCallsMade, safety: restrictionCheck(userText) };
+  return { finalText, toolCalls: toolCallsMade };
 }

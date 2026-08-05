@@ -37,34 +37,19 @@ writes run in Actions.
 - **Get a refresh token:** create OAuth credentials at https://console.cloud.google.com/apis/credentials (enable the Calendar API), then run the one-off local helper `data-repo-template/scripts/google-oauth.mjs` and follow the URL to authorise. It prints a refresh token.
 - **Where it goes (Actions secrets on `life-balancer-data`):** repo **Settings → Secrets and variables → Actions**:
   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_CALENDAR_ID`.
-- **Test:** queue a change in Chat ("add tomorrow's ride to my calendar"), wait for the 15-min `calendar-sync` workflow (or run it manually from the Actions tab). The event appears on the Life Balancer calendar and the queue entry flips to `done`.
+- **Test:** ask in Chat "put my training plan on my calendar", wait for the 15-min `calendar-sync` workflow (or run it manually from the Actions tab). The events appear on the Life Balancer calendar and the queue entries flip to `done`.
 
-## 4. Strava — training sync
+## 4. Schoology — assignments (optional)
 
-- **Create an API app:** https://www.strava.com/settings/api. Note the **Client ID** and **Client Secret**.
-- **Get a refresh token:** run `data-repo-template/scripts/strava-oauth.mjs` locally, authorise, copy the printed refresh token.
-- **Where it goes (Actions secrets):** `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`.
-- **Test:** run the `strava-sync` workflow. `data/strava-activities.json` gains recent rides, and completed sessions in the app show `✓` with actual duration/climbing.
+Lets the bot pull your real assignments so it can put their due dates and study
+blocks on your calendar. If your school has disabled personal API keys, skip
+this and just tell the bot your deadlines directly.
 
-> Webhooks need a public callback URL, so we **poll** `/athlete/activities` every 30 min instead.
+**Check first (§3.2):** go to https://schoology.com/api — if it lets you generate a key.
 
-## 5. Apple Health / Garmin — sleep
-
-Garmin's Health API needs partner approval (unrealistic solo), so we read sleep
-from **Apple Health** (Garmin syncs into it) via an iOS Shortcut (§2, §3.4).
-
-- **Build the Shortcut:** *Health → Find Sleep Samples (last night)* + *Resting Heart Rate* → format as JSON → *Get Contents of URL* PUT to the GitHub Contents API for `data/health-sleep.json` (Authorization: `Bearer <PAT>`). Trigger it on a daily *Automation*.
-- **Where it goes:** the Shortcut uses the same fine-grained PAT (step 2). No Actions secret needed.
-- **Test:** run the Shortcut once; `data/health-sleep.json` updates and **Me → Recovery** shows last night's score.
-
-## 6. Schoology — assignments + trips
-
-**Check first (§3.2):** go to https://schoology.com/api — if your school (ISZL)
-has disabled personal API keys, **stay on manual assignment entry** and skip this.
-
-- **Get keys:** if enabled, generate your **Consumer Key** and **Secret** on that page.
+- **Get keys:** generate your **Consumer Key** and **Secret** on that page.
 - **Where it goes (Actions secrets):** `SCHOOLOGY_KEY`, `SCHOOLOGY_SECRET`, `SCHOOLOGY_BASE` (your school's API host).
-- **Test:** run the `schoology-sync` workflow. `data/schoology.json` fills with assignments and trip events; the **School** view shows them and trips appear as all-day calendar events.
+- **Test:** run the `schoology-sync` workflow. `data/schoology.json` fills with assignments; ask the bot "add my assignments to my calendar" and the due dates get queued.
 
 > OAuth 1.0 request signing happens in Actions, never the browser.
 

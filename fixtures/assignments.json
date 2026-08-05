@@ -3,7 +3,7 @@
     "id": "asg-1",
     "title": "Physics: Forces problem set",
     "course": "Physics",
-    "due": "2026-08-02",
+    "due": "2026-08-04",
     "weight": 5,
     "status": "submitted",
     "source": "schoology"
@@ -12,7 +12,7 @@
     "id": "asg-2",
     "title": "English essay: Of Mice and Men",
     "course": "English",
-    "due": "2026-08-05",
+    "due": "2026-08-07",
     "weight": 20,
     "status": "open",
     "source": "schoology"
@@ -21,7 +21,7 @@
     "id": "asg-3",
     "title": "Maths: Quadratics worksheet",
     "course": "Mathematics",
-    "due": "2026-08-04",
+    "due": "2026-08-06",
     "weight": 8,
     "status": "open",
     "source": "schoology"
@@ -30,7 +30,7 @@
     "id": "asg-4",
     "title": "History source analysis",
     "course": "History",
-    "due": "2026-08-07",
+    "due": "2026-08-09",
     "weight": 15,
     "status": "open",
     "source": "schoology"
@@ -39,7 +39,7 @@
     "id": "asg-5",
     "title": "Biology lab write-up",
     "course": "Biology",
-    "due": "2026-08-09",
+    "due": "2026-08-11",
     "weight": 12,
     "status": "open",
     "source": "schoology"
@@ -48,7 +48,7 @@
     "id": "asg-6",
     "title": "Spanish vocab quiz",
     "course": "Spanish",
-    "due": "2026-08-06",
+    "due": "2026-08-08",
     "weight": 6,
     "status": "open",
     "source": "schoology"
@@ -57,7 +57,7 @@
     "id": "asg-7",
     "title": "Geography fieldwork report",
     "course": "Geography",
-    "due": "2026-08-12",
+    "due": "2026-08-14",
     "weight": 18,
     "status": "open",
     "source": "schoology"
@@ -66,7 +66,7 @@
     "id": "asg-8",
     "title": "Maths: Trigonometry test",
     "course": "Mathematics",
-    "due": "2026-08-15",
+    "due": "2026-08-17",
     "weight": 25,
     "status": "open",
     "source": "schoology"
@@ -75,7 +75,7 @@
     "id": "asg-9",
     "title": "Design tech portfolio",
     "course": "Design",
-    "due": "2026-08-19",
+    "due": "2026-08-21",
     "weight": 30,
     "status": "open",
     "source": "schoology"
@@ -84,7 +84,7 @@
     "id": "asg-10",
     "title": "Chemistry mole calculations",
     "course": "Chemistry",
-    "due": "2026-08-08",
+    "due": "2026-08-10",
     "weight": 10,
     "status": "open",
     "source": "schoology"
@@ -93,7 +93,7 @@
     "id": "asg-11",
     "title": "English reading log",
     "course": "English",
-    "due": "2026-08-03",
+    "due": "2026-08-05",
     "weight": 4,
     "status": "open",
     "source": "schoology"
@@ -102,7 +102,7 @@
     "id": "asg-12",
     "title": "PE theory: training zones",
     "course": "PE",
-    "due": "2026-08-24",
+    "due": "2026-08-26",
     "weight": 8,
     "status": "open",
     "source": "schoology"
