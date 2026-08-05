@@ -15,15 +15,15 @@ This repo now contains the built PWA. It runs **fully on realistic demo data wit
 ```bash
 npm install     # dev-only: Playwright, used by the check
 npm start       # serve at http://localhost:5173
-npm run check   # headless self-verification — 26 assertions
+npm run check   # headless self-verification — 22 assertions
 ```
 
 Open the URL on a phone (or a 390×844 viewport). **The app is a single chatbot with one job: putting things on your Google Calendar.** Tell it your training plan and it schedules the sessions; ask it to add your assignment due dates and study time; or just say "add football practice tomorrow at 5". It streams replies and shows each calendar write as a thin ✓ row. A gear (⚙) opens setup for keys. The amber **DEMO DATA** bar shows until you connect keys.
 
 > Scope note: this started as a five-tab life dashboard (per the spec §4) and was **stripped all the way back** to a calendar scheduler at the owner's direction — no nutrition, goals, weight, recovery, or dashboards. It now does exactly what §1 asked for: the chatbot is the only input, Google Calendar the only output.
 
-- **Connecting real integrations:** [SETUP.md](SETUP.md) — Anthropic (chat) → GitHub PAT (data) → Google Calendar (output) → Schoology (assignments). Each flips its own adapter from mock to live independently.
-- **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflows (calendar drain, Schoology pull).
+- **Connecting real integrations:** [SETUP.md](SETUP.md) — Anthropic (chat) → GitHub PAT (data) → Google Calendar (output). Each flips its own adapter from mock to live independently.
+- **Private data-repo automation:** [data-repo-template/](data-repo-template/) — the scheduled workflow (calendar drain); a Schoology pull is scaffolded for the future.
 - **Conventions:** [CLAUDE.md](CLAUDE.md).
 - **What works vs what's still stubbed:** see [Status](#status--what-works-vs-stubbed) at the bottom.
 
@@ -308,22 +308,22 @@ Push notifications — VAPID keys, subscribe flow, scheduled reminders. The cale
 
 ## Status — what works vs stubbed
 
-The app was **stripped back to a calendar scheduler** at the owner's direction — the nutrition/fuelling, goals, weight, recovery, Strava and dashboard features described elsewhere in this spec were removed. What remains:
+The app was **stripped back to a calendar scheduler** at the owner's direction. The nutrition/fuelling, goals, weight, recovery, Strava and dashboard features described elsewhere in this spec were removed; pulling assignments from Schoology is deferred to a **future** addition. What remains:
 
-**Works today, fully verifiable in mock mode (`npm run check` — 26/26 passing):**
+**Works today, fully verifiable in mock mode (`npm run check` — 22/22 passing):**
 
 - **Single-chatbot PWA shell** — one full-screen conversation, a header with a setup gear, no other pages; manifest, service worker, **offline render**, home-screen install metadata, dark styling, safe-area insets, 390×844.
 - **Chat** — streaming, typing indicator, persisted history, and the **full tool-use loop**; a greeting that explains what it does.
-- **Five calendar tools**, each reading/writing real JSON and stating what it scheduled: `adjust_training_plan`, `add_training_to_calendar`, `add_assignments_to_calendar`, `create_study_block`, `queue_calendar_change`.
+- **Three tools**, each reading/writing real JSON and stating what it scheduled: `queue_calendar_change` (the core — schedule anything you describe), `add_training_to_calendar`, `adjust_training_plan`.
+- **You describe it → it's on your calendar** — "add football practice tomorrow at 5", "dentist next Monday 9am" queue a single event each.
 - **Training plan → calendar** — "put my training plan on my calendar" queues the week's sessions as dated events.
-- **Assignments → calendar** — "add my assignments" pulls open Schoology assignments and queues their DUE dates, optionally with **study blocks** placed in free time and proven never to overlap fixed commitments.
-- **One-off requests → calendar** — "add football practice tomorrow at 5" queues a single event.
 - **Google Calendar as the only output** — every decision becomes a queued intent; the drain marks entries `done` (idempotent).
 - **Setup (gear → modal)** — per-integration connected/not-connected status; key entry (never displayed/logged); clear-all wipes keys + unregisters the SW.
-- Adapters (schoology, calendar, anthropic): signature-identical `mock.js`/`live.js`; selection automatic on a key appearing.
+- Adapters (calendar, anthropic): signature-identical `mock.js`/`live.js`; selection automatic on a key appearing.
 
-**Stubbed / awaiting real credentials (unverifiable here, templated for when keys go in):**
+**Deferred / stubbed:**
 
-- Live API calls — the `live.js` adapters and the `data-repo-template/` scripts (Google Calendar drain, Schoology pull, their OAuth) are written but need real secrets to exercise. One-off OAuth helper scripts are provided.
+- **Schoology assignments → study time** — planned future feature; the `data-repo-template/schoology-sync.yml` workflow is left as scaffolding.
+- Live API calls — the `live.js` adapters and the `data-repo-template/` Google Calendar drain are written but need real secrets to exercise. A one-off OAuth helper is provided.
 - Push notifications — Phase 7, intentionally not built (§5.5).
 - Manual device checks (real iOS home-screen install, live network-kill mid-session) — the automated offline + render checks cover the headless equivalents.

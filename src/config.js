@@ -11,11 +11,10 @@ export const USER = {
 export const DATA_FILES = {
   trainingPlan: 'data/training-plan.json',
   calendarQueue: 'data/calendar-queue.json',
-  studyBlocks: 'data/study-blocks.json',
   syncStatus: 'data/sync-status.json',
 };
 
-export const INTEGRATIONS = ['anthropic', 'github', 'calendar', 'strava', 'schoology'];
+export const INTEGRATIONS = ['anthropic', 'github', 'calendar'];
 
 // Garmin-Connect-style palette. Never red for anything health-related.
 export const THEME = {
@@ -36,12 +35,10 @@ export function buildSystemPrompt() {
     `Your one job is to put things on the user's Google Calendar: their training plan, their school assignments and study time, and any one-off events they ask for.`,
     `Be direct and brief — a sentence or two, never an essay.`,
     `Tools you have:`,
-    `- adjust_training_plan — edit a day of the weekly training plan.`,
-    `- add_training_to_calendar — push the training plan's sessions onto the calendar for the week(s) ahead.`,
-    `- add_assignments_to_calendar — put open assignment due dates (and optional study blocks) onto the calendar.`,
-    `- create_study_block — schedule study time for one specific assignment.`,
-    `- queue_calendar_change — add, move, or delete a single one-off event.`,
+    `- queue_calendar_change — add, move, or delete a single calendar event. Call it once per event; for several things (like a training plan) call it several times.`,
+    `- add_training_to_calendar — push the saved weekly training plan's sessions onto the calendar for the week(s) ahead.`,
+    `- adjust_training_plan — edit a day of the saved weekly training plan.`,
+    `Whenever the user describes something to put on their calendar — an event, an appointment, a plan — schedule it with queue_calendar_change. Ask for a date/time only if they didn't give one.`,
     `Calendar writes are queued and a background job syncs them to Google Calendar. After any tool call, say plainly what you scheduled and that it will appear on Google Calendar.`,
-    `Confirm changes to the training plan in the conversation before applying them.`,
   ].join('\n');
 }

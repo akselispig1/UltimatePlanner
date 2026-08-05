@@ -28,56 +28,6 @@
     },
     {
       "match": [
-        "assignment",
-        "homework",
-        "schoology",
-        "due date",
-        "due dates",
-        "school work",
-        "add my assignments",
-        "put my assignments"
-      ],
-      "steps": [
-        {
-          "text": "I'll pull your open assignments and put their due dates on your calendar, with study blocks in the free evenings."
-        },
-        {
-          "tool": "add_assignments_to_calendar",
-          "input": {
-            "includeStudyBlocks": true
-          }
-        },
-        {
-          "text": "Added your assignment due dates and study blocks to Google Calendar."
-        }
-      ]
-    },
-    {
-      "match": [
-        "study",
-        "revise",
-        "revision",
-        "essay",
-        "exam"
-      ],
-      "steps": [
-        {
-          "text": "I'll block out 60 minutes for the English essay in a free evening slot."
-        },
-        {
-          "tool": "create_study_block",
-          "input": {
-            "assignmentTitle": "English essay: Of Mice and Men",
-            "durationMin": 60
-          }
-        },
-        {
-          "text": "Scheduled a 60-minute study block and queued it to your calendar."
-        }
-      ]
-    },
-    {
-      "match": [
         "make thursday",
         "change thursday",
         "thursday a",
@@ -115,7 +65,11 @@
         "practice",
         "football",
         "dentist",
-        "put "
+        "put ",
+        "schedule",
+        "meeting",
+        "party",
+        "birthday"
       ],
       "steps": [
         {
@@ -142,7 +96,7 @@
   "fallback": {
     "steps": [
       {
-        "text": "I put things on your Google Calendar. I can schedule your training plan, add your assignment due dates and study time, or add a one-off event — just tell me what and when."
+        "text": "I put things on your Google Calendar. Tell me an event and when — like \"add football practice tomorrow at 5\" — or say \"put my training plan on my calendar\"."
       }
     ]
   }

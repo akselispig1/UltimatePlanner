@@ -14,16 +14,6 @@
       "connected": false,
       "lastSync": null,
       "lastError": null
-    },
-    "strava": {
-      "connected": false,
-      "lastSync": null,
-      "lastError": null
-    },
-    "schoology": {
-      "connected": false,
-      "lastSync": null,
-      "lastError": null
     }
   }
 }

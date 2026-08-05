@@ -2,8 +2,6 @@
 // mock.js and live.js. Selection is automatic — a key appearing flips live,
 // never a code change. In full demo mode (no keys) every adapter is mock.
 
-import * as schoologyMock from './schoology/mock.js';
-import * as schoologyLive from './schoology/live.js';
 import * as calendarMock from './calendar/mock.js';
 import * as calendarLive from './calendar/live.js';
 import * as anthropicMock from './anthropic/mock.js';
@@ -11,10 +9,9 @@ import * as anthropicLive from './anthropic/live.js';
 
 import { hasAnthropicKey, hasGithubKey } from '../keys.js';
 
-// Schoology/Calendar go live once the data repo is wired (GitHub PAT present);
-// Anthropic goes live on its own key.
+// Calendar goes live once the data repo is wired (GitHub PAT present); Anthropic
+// goes live on its own key.
 export const REGISTRY = {
-  schoology: { mock: schoologyMock, live: schoologyLive, gate: hasGithubKey },
   calendar: { mock: calendarMock, live: calendarLive, gate: hasGithubKey },
   anthropic: { mock: anthropicMock, live: anthropicLive, gate: hasAnthropicKey },
 };

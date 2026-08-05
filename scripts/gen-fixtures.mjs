@@ -20,8 +20,6 @@ const write = (name, data) => {
   console.log('wrote fixtures/' + name);
 };
 
-write('assignments.json', fx.assignments(now));
-write('external-calendar.json', fx.externalCalendar(now));
 write('training-plan.json', fx.trainingPlan());
 write('chat-responses.json', { responses: fx.chatResponses(), fallback: fx.CHAT_FALLBACK });
 write('_seed-sync-status.json', seedFor(DATA_FILES.syncStatus));

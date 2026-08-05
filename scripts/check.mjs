@@ -14,11 +14,8 @@ import { REGISTRY, ADAPTER_NAMES, getAdapter } from '../src/adapters/index.js';
 import { store, mockBackend } from '../src/storage.js';
 import { validate, SCHEMAS } from '../src/schemas.js';
 import { DATA_FILES } from '../src/config.js';
-import { generateStudyBlocks } from '../src/features/school.js';
-import { fixedCommitments, overlaps } from '../src/features/schedule.js';
 import { drainQueue, enqueue } from '../src/features/calendar-queue.js';
 import { runChat } from '../src/chat.js';
-import * as fx from '../src/fixtures.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const results = [];
@@ -76,43 +73,23 @@ async function checkQueueDrain() {
   check('re-drain is idempotent (0 new writes)', res2.done === 0 && res2.pending === 0);
 }
 
-function checkStudyOverlap() {
-  section('Study blocks never overlap fixed commitments (§3.2)');
-  const now = new Date();
-  const assignments = fx.assignments(now);
-  const plan = fx.trainingPlan();
-  const externalCal = fx.externalCalendar(now).filter((e) => e.kind === 'trip');
-  const blocks = generateStudyBlocks({ assignments, plan, externalCal, now });
-  let overlapsFound = 0;
-  let selfOverlap = 0;
-  const byDate = {};
-  for (const b of blocks) {
-    const [h, m] = b.start.split(':').map(Number);
-    const bi = { start: h * 60 + m, end: h * 60 + m + b.durationMin };
-    for (const f of fixedCommitments(b.date, { plan, externalCal })) if (overlaps(bi, f)) overlapsFound++;
-    (byDate[b.date] ||= []).forEach((other) => { if (overlaps(bi, other)) selfOverlap++; });
-    (byDate[b.date] ||= []).push(bi);
-  }
-  check('generated at least one study block', blocks.length > 0, `${blocks.length} blocks`);
-  check('no study block overlaps a fixed commitment', overlapsFound === 0, `${overlapsFound} overlaps`);
-  check('no two study blocks overlap each other', selfOverlap === 0, `${selfOverlap} overlaps`);
-}
-
 async function checkSchedulesToCalendar() {
-  section('Chat schedules to the Google Calendar queue');
+  section('Chat schedules to the Google Calendar queue (§1.5)');
+  // A one-off request the user describes.
   const q0 = (await store.read(DATA_FILES.calendarQueue)).queue.length;
+  const t0 = [];
+  await runChat({ userText: 'add football practice tomorrow at 5', onTool: (t) => t0.push(t.name), now: new Date() });
+  const q0b = (await store.read(DATA_FILES.calendarQueue)).queue;
+  check('a described event is queued to the calendar', t0.includes('queue_calendar_change') && q0b.length === q0 + 1, `+${q0b.length - q0}`);
+  check('the queued event has a title', (q0b[q0b.length - 1].event.title || '').length > 0);
+
+  // The saved training plan pushed to the calendar.
   const t1 = [];
   await runChat({ userText: 'put my training plan on my calendar', onTool: (t) => t1.push(t.name), now: new Date() });
   const q1 = (await store.read(DATA_FILES.calendarQueue)).queue;
-  const trainingAdded = q1.length - q0;
+  const trainingAdded = q1.length - q0b.length;
   check('training plan → calendar events queued', t1.includes('add_training_to_calendar') && trainingAdded > 0, `+${trainingAdded} events`);
-  check('queued training events carry a date + time', q1.slice(q0).every((e) => e.event.date && e.event.start));
-
-  const t2 = [];
-  await runChat({ userText: 'add my assignments to my calendar', onTool: (t) => t2.push(t.name), now: new Date() });
-  const q2 = (await store.read(DATA_FILES.calendarQueue)).queue;
-  const dues = q2.filter((e) => (e.event.title || '').startsWith('DUE:')).length;
-  check('assignments → DUE all-day events queued', t2.includes('add_assignments_to_calendar') && dues > 0, `${dues} due dates`);
+  check('queued training events carry a date + time', q1.slice(q0b.length).every((e) => e.event.date && e.event.start));
 }
 
 async function checkNoSecrets() {
@@ -199,7 +176,6 @@ async function main() {
   checkAdapterParity();
   await checkRoundTrip();
   await checkQueueDrain();
-  checkStudyOverlap();
   await checkSchedulesToCalendar();
   await checkNoSecrets();
   try {

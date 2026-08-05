@@ -38,7 +38,7 @@ export function render(app) {
 }
 
 function greeting() {
-  return "I put things on your Google Calendar. Tell me your training plan and I'll schedule it, ask me to add your assignments and study time, or just say things like \"add football practice tomorrow at 5\".";
+  return "I put things on your Google Calendar. Just tell me — \"add football practice tomorrow at 5\", \"dentist next Monday 9am\", or \"put my training plan on my calendar\".";
 }
 
 function bubble(role, text) {

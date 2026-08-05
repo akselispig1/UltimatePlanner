@@ -12,9 +12,6 @@ export function seedFor(fileKey) {
     case DATA_FILES.calendarQueue:
       return { queue: [] };
 
-    case DATA_FILES.studyBlocks:
-      return { blocks: [] };
-
     case DATA_FILES.syncStatus: {
       const integrations = {};
       for (const key of INTEGRATIONS) integrations[key] = { connected: false, lastSync: null, lastError: null };

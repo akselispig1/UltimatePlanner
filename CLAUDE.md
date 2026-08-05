@@ -45,27 +45,30 @@ and must never break.
 
 `src/tools.js` — each writes real JSON and says what it scheduled:
 
+- `queue_calendar_change` — the core: add / move / delete a single calendar event. The bot calls it for anything the user describes (one call per event).
+- `add_training_to_calendar` — queue the saved weekly plan's sessions to the calendar for the week(s) ahead.
 - `adjust_training_plan` — edit a day of the weekly plan (`data/training-plan.json`).
-- `add_training_to_calendar` — queue the plan's sessions to the calendar for the week(s) ahead.
-- `add_assignments_to_calendar` — queue open assignment DUE events (+ optional study blocks).
-- `create_study_block` — schedule study time for one assignment; never overlaps a fixed commitment (`features/school.js` + `features/schedule.js`).
-- `queue_calendar_change` — add / move / delete a single one-off event.
+
+**Deferred to the future (per the owner):** pulling assignments from Schoology
+and auto-scheduling study time. The schoology adapter, the study-block logic,
+and those tools were removed. The `data-repo-template/schoology-sync.yml`
+workflow is left as scaffolding for when that feature is built.
 
 ## Layout
 
 ```
 index.html, styles.css, manifest.webmanifest, sw.js   PWA shell (offline-first)
-src/adapters/<svc>/{mock,live}.js                      schoology, calendar, anthropic
-src/features/{schedule,school,training,calendar-queue}.js   pure scheduling logic
+src/adapters/<svc>/{mock,live}.js                      calendar, anthropic
+src/features/{training,calendar-queue}.js              plan resolution + the queue
 src/views/chat.js, settings.js                         the whole UI: chat + setup modal
-src/{chat,tools,context,app-data,storage,keys}.js      chat loop, 5 tools, snapshot, data
+src/{chat,tools,context,app-data,storage,keys}.js      chat loop, 3 tools, snapshot, data
 fixtures/*.json                                        committed fixture snapshots
 scripts/check.mjs                                      npm run check
 data-repo-template/                                    workflows for the private data repo
 ```
 
-Data files: `training-plan.json`, `calendar-queue.json`, `study-blocks.json`,
-`sync-status.json`. That's the whole store.
+Data files: `training-plan.json`, `calendar-queue.json`, `sync-status.json`.
+That's the whole store.
 
 ## Testing
 

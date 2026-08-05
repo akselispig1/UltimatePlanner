@@ -1,44 +1,5 @@
-// Realistic demo fixtures (§5.1). Data is anchored to "now" via day offsets so
-// the demo always looks current. Deterministic (seeded) so runs are repeatable.
-// Pure module — importable in Node and the browser.
-
-import { offsetToIso } from './util/dates.js';
-
-// --- Schoology assignments: a dozen, varying urgency and weight. ---
-export function assignments(now = new Date()) {
-  const raw = [
-    ['Physics: Forces problem set', 'Physics', -1, 5, 'submitted'],
-    ['English essay: Of Mice and Men', 'English', 2, 20, 'open'],
-    ['Maths: Quadratics worksheet', 'Mathematics', 1, 8, 'open'],
-    ['History source analysis', 'History', 4, 15, 'open'],
-    ['Biology lab write-up', 'Biology', 6, 12, 'open'],
-    ['Spanish vocab quiz', 'Spanish', 3, 6, 'open'],
-    ['Geography fieldwork report', 'Geography', 9, 18, 'open'],
-    ['Maths: Trigonometry test', 'Mathematics', 12, 25, 'open'],
-    ['Design tech portfolio', 'Design', 16, 30, 'open'],
-    ['Chemistry mole calculations', 'Chemistry', 5, 10, 'open'],
-    ['English reading log', 'English', 0, 4, 'open'],
-    ['PE theory: training zones', 'PE', 21, 8, 'open'],
-  ];
-  return raw.map(([title, course, dueOffset, weight, status], i) => ({
-    id: `asg-${i + 1}`,
-    title,
-    course,
-    due: offsetToIso(dueOffset, now),
-    weight, // relative importance; drives study-block sizing
-    status,
-    source: 'schoology',
-  }));
-}
-
-// --- Calendar events already on the school/trips calendar (external, read-only). ---
-export function externalCalendar(now = new Date()) {
-  return [
-    { id: 'cal-trip-1', title: 'Geography field trip — Ticino', date: offsetToIso(10, now), endDate: offsetToIso(11, now), allDay: true, kind: 'trip', source: 'schoology' },
-    { id: 'cal-sch-1', title: 'School day', date: offsetToIso(1, now), allDay: false, start: '08:15', end: '15:30', kind: 'school', source: 'schoology' },
-    { id: 'cal-sch-2', title: 'School day', date: offsetToIso(2, now), allDay: false, start: '08:15', end: '15:30', kind: 'school', source: 'schoology' },
-  ];
-}
+// Realistic demo fixtures. Data is anchored to "now" via day offsets so the demo
+// always looks current. Pure module — importable in Node and the browser.
 
 // --- Seed training plan (weekly, recurring by weekday). ---
 export function trainingPlan() {
@@ -56,7 +17,7 @@ export function trainingPlan() {
   };
 }
 
-// --- Canned chat responses incl. tool calls (§5.1). Matched by keyword. ---
+// --- Canned chat responses incl. tool calls. Matched by keyword. ---
 // Each entry is a list of assistant "steps": either {text} or {tool, input}.
 // After a tool step the mock feeds the tool result back and continues.
 export function chatResponses() {
@@ -70,22 +31,6 @@ export function chatResponses() {
       ],
     },
     {
-      match: ['assignment', 'homework', 'schoology', 'due date', 'due dates', 'school work', 'add my assignments', 'put my assignments'],
-      steps: [
-        { text: "I'll pull your open assignments and put their due dates on your calendar, with study blocks in the free evenings." },
-        { tool: 'add_assignments_to_calendar', input: { includeStudyBlocks: true } },
-        { text: "Added your assignment due dates and study blocks to Google Calendar." },
-      ],
-    },
-    {
-      match: ['study', 'revise', 'revision', 'essay', 'exam'],
-      steps: [
-        { text: "I'll block out 60 minutes for the English essay in a free evening slot." },
-        { tool: 'create_study_block', input: { assignmentTitle: 'English essay: Of Mice and Men', durationMin: 60 } },
-        { text: 'Scheduled a 60-minute study block and queued it to your calendar.' },
-      ],
-    },
-    {
       match: ['make thursday', 'change thursday', 'thursday a', 'make tuesday', 'change my plan', 'longer ride', 'rest day', 'swap', 'make it a'],
       steps: [
         { text: "I'll change Thursday to an endurance ride — want that applied?" },
@@ -94,7 +39,7 @@ export function chatResponses() {
       ],
     },
     {
-      match: ['add', 'remind', 'tomorrow', 'appointment', 'practice', 'football', 'dentist', 'put '],
+      match: ['add', 'remind', 'tomorrow', 'appointment', 'practice', 'football', 'dentist', 'put ', 'schedule', 'meeting', 'party', 'birthday'],
       steps: [
         { text: "I'll add that to your calendar." },
         { tool: 'queue_calendar_change', input: { action: 'create', event: { title: 'Football practice', date: '+1', start: '17:00', durationMin: 90 } } },
@@ -107,6 +52,6 @@ export function chatResponses() {
 // Default assistant reply when nothing matches.
 export const CHAT_FALLBACK = {
   steps: [
-    { text: "I put things on your Google Calendar. I can schedule your training plan, add your assignment due dates and study time, or add a one-off event — just tell me what and when." },
+    { text: "I put things on your Google Calendar. Tell me an event and when — like \"add football practice tomorrow at 5\" — or say \"put my training plan on my calendar\"." },
   ],
 };

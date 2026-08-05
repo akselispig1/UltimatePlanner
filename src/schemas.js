@@ -88,28 +88,6 @@ export const SCHEMAS = {
     },
   },
 
-  [DATA_FILES.studyBlocks]: {
-    name: 'study-blocks',
-    type: 'object',
-    props: {
-      blocks: {
-        type: 'array',
-        required: true,
-        items: {
-          type: 'object',
-          props: {
-            id: { type: 'string', required: true },
-            assignmentId: { type: ['string', 'null'], required: true },
-            title: { type: 'string', required: true },
-            date: { type: 'string', required: true },
-            start: { type: 'string', required: true },
-            durationMin: { type: 'number', required: true },
-          },
-        },
-      },
-    },
-  },
-
   [DATA_FILES.syncStatus]: {
     name: 'sync-status',
     type: 'object',
